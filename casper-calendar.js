@@ -33,6 +33,15 @@ class CasperCalendar extends PolymerElement {
         notify: true
       },
       /**
+       * The date range that is currently active.
+       *
+       * @type {Object}
+       */
+      activeDateRange: {
+        type: Object,
+        notify: true
+      },
+      /**
        * This array contains the cells that are currently painted in the page.
        *
        * @type {Array}
@@ -266,12 +275,14 @@ class CasperCalendar extends PolymerElement {
    * @param {Object} event The event's object.
    */
   __cellOnMouseDown (event) {
-    this.__removeActiveAtributeFromCells();
-
-    const cellDataset = event.composedPath().shift().dataset;
+    this.__removeActiveAttributeFromCells();
 
     this.__isSelectingInterval = true;
-    this.__startDateInterval = moment(new Date(this.year, cellDataset.month, cellDataset.day));
+    this.__activeRangeStart = moment(new Date(
+      this.year,
+      event.composedPath().shift().dataset.month,
+      event.composedPath().shift().dataset.day
+    ));
   }
 
   /**
@@ -283,15 +294,20 @@ class CasperCalendar extends PolymerElement {
   __cellOnMouseEnter (event) {
     if (!this.__isSelectingInterval) return;
 
-    const cellDataset = event.composedPath().shift().dataset;
-    const cellDate = moment(new Date(this.year, cellDataset.month, cellDataset.day));
+    this.__removeActiveAttributeFromCells();
 
-    const daysBetweenBothDates = cellDate.diff(this.__startDateInterval, 'days');
+    this.__activeRangeEnd = moment(new Date(
+      this.year,
+      event.composedPath().shift().dataset.month,
+      event.composedPath().shift().dataset.day
+    ));
+
+    const daysBetweenBothDates = this.__activeRangeEnd.diff(this.__activeRangeStart, 'days');
 
     for (let daysCount = 0; daysCount <= Math.abs(daysBetweenBothDates); daysCount++) {
       const currentDate = daysBetweenBothDates > 0
-        ? moment(this.__startDateInterval).add(daysCount, 'days')
-        : moment(this.__startDateInterval).subtract(daysCount, 'days');
+        ? moment(this.__activeRangeStart).add(daysCount, 'days')
+        : moment(this.__activeRangeStart).subtract(daysCount, 'days');
 
       const currentDateCell = this.__findCellByMonthAndDay(currentDate.month(), currentDate.date());
       currentDateCell.setAttribute('active', true);
@@ -304,13 +320,19 @@ class CasperCalendar extends PolymerElement {
    */
   __cellOnMouseUp () {
     this.__isSelectingInterval = false;
+
+    this.activeDateRange = {
+      startRange: this.__activeRangeStart.toDate(),
+      endRange: this.__activeRangeEnd.toDate(),
+    };
   }
 
   /**
    * This method gets invoked when the active date changes and paints its corresponding cell.
    */
   __activeDateChanged () {
-    this.__removeActiveAtributeFromCells();
+    this.__removeActiveAttributeFromCells();
+
     const currentDateCell = this.__findCellByMonthAndDay(this.activeDate.getMonth(), this.activeDate.getDate());
 
     // This means the calendar is not yet fully rendered, so we postpone the remaining function.
