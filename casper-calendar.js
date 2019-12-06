@@ -31,6 +31,15 @@ class CasperCalendar extends PolymerElement {
         value: new Date(),
         observer: '__activeDateChanged',
         notify: true
+      },
+      /**
+       * This array contains the cells that are currently painted in the page.
+       *
+       * @type {Array}
+       */
+      __activeCells: {
+        type: Array,
+        value: []
       }
     }
   }
@@ -133,6 +142,9 @@ class CasperCalendar extends PolymerElement {
             <template is="dom-repeat" items="[[__getDaysForMonth(index)]]" as="monthDay">
               <div
                 on-click="__cellClicked"
+                on-mouseup="__cellOnMouseUp"
+                on-mousedown="__cellOnMouseDown"
+                on-mouseenter="__cellOnMouseEnter"
                 data-month$="[[month.index]]"
                 data-day$="[[monthDay.index]]"
                 class$="cell [[__isWeekend(monthDay.weekDay)]]">[[monthDay.index]]</div>
@@ -249,20 +261,81 @@ class CasperCalendar extends PolymerElement {
   }
 
   /**
+   * This method gets invoked when the user presses the mouse key down on top of a cell.
+   *
+   * @param {Object} event The event's object.
+   */
+  __cellOnMouseDown (event) {
+    this.__removeActiveAtributeFromCells();
+
+    const cellDataset = event.composedPath().shift().dataset;
+
+    this.__isSelectingInterval = true;
+    this.__startDateInterval = moment(new Date(this.year, cellDataset.month, cellDataset.day));
+  }
+
+  /**
+   * This method gets invoked when the user hovers through a cell. If he is holding the mouse key down, the component
+   * will start to create an interval of dates painting the cells that are contained in the aforementioned interval.
+   *
+   * @param {Object} event The event's object.
+   */
+  __cellOnMouseEnter (event) {
+    if (!this.__isSelectingInterval) return;
+
+    const cellDataset = event.composedPath().shift().dataset;
+    const cellDate = moment(new Date(this.year, cellDataset.month, cellDataset.day));
+
+    const daysBetweenBothDates = cellDate.diff(this.__startDateInterval, 'days');
+
+    for (let daysCount = 0; daysCount <= Math.abs(daysBetweenBothDates); daysCount++) {
+      const currentDate = daysBetweenBothDates > 0
+        ? moment(this.__startDateInterval).add(daysCount, 'days')
+        : moment(this.__startDateInterval).subtract(daysCount, 'days');
+
+      const currentDateCell = this.__findCellByMonthAndDay(currentDate.month(), currentDate.date());
+      currentDateCell.setAttribute('active', true);
+      this.__activeCells.push(currentDateCell);
+    }
+  }
+
+  /**
+   * This method is invoked when the user releases the mouse key and therefore we set the __isSelectingInterval to false.
+   */
+  __cellOnMouseUp () {
+    this.__isSelectingInterval = false;
+  }
+
+  /**
    * This method gets invoked when the active date changes and paints its corresponding cell.
    */
   __activeDateChanged () {
-    if (this.__activeCell) this.__activeCell.removeAttribute('active');
-
-    const activeCellSelector = `.cell[data-month="${this.activeDate.getMonth()}"][data-day="${this.activeDate.getDate()}"]`;
-    this.__activeCell = this.shadowRoot.querySelector(activeCellSelector);
+    this.__removeActiveAtributeFromCells();
+    const currentDateCell = this.__findCellByMonthAndDay(this.activeDate.getMonth(), this.activeDate.getDate());
 
     // This means the calendar is not yet fully rendered, so we postpone the remaining function.
-    if (!this.__activeCell) {
-      return afterNextRender(this, () => this.__activeDateChanged());
-    }
+    if (!currentDateCell) return afterNextRender(this, () => this.__activeDateChanged());
 
-    this.__activeCell.setAttribute('active', true);
+    currentDateCell.setAttribute('active', true);
+    this.__activeCells.push(currentDateCell);
+  }
+
+  /**
+   * This method queries the page for the cell which has a specific month and day.
+   *
+   * @param {Number} month The month that will be used in the cell's selector.
+   * @param {Number} day The day that will be used in the cell's selector.
+   */
+  __findCellByMonthAndDay (month, day) {
+    return this.shadowRoot.querySelector(`.cell[data-month="${month}"][data-day="${day}"]`);
+  }
+
+  /**
+   * This method resets the currently painted cells.
+   */
+  __removeActiveAttributeFromCells () {
+    this.__activeCells.forEach(activeCell => activeCell.removeAttribute('active'));
+    this.__activeCells = [];
   }
 }
 
