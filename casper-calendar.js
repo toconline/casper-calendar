@@ -20,6 +20,17 @@ class CasperCalendar extends PolymerElement {
         type: Number,
         value: new Date().getFullYear(),
         observer: '__yearChanged'
+      },
+      /**
+       * The date that is currently active.
+       *
+       * @type {Date}
+       */
+      activeDate: {
+        type: Object,
+        value: new Date(),
+        observer: '__activeDateChanged',
+        notify: true
       }
     }
   }
@@ -30,6 +41,7 @@ class CasperCalendar extends PolymerElement {
         #main-container {
           display: flex;
           flex-grow: 1;
+          user-select: none;
           flex-direction: column;
         }
 
@@ -47,6 +59,16 @@ class CasperCalendar extends PolymerElement {
           box-sizing: border-box;
           border-left: 1px #F2F2F2 solid;
           border-bottom: 1px #F2F2F2 solid;
+        }
+
+        #main-container .row-container .cell:not(.cell--left-header):not(.cell--top-header)[active] {
+          color: var(--on-primary-color);
+          background-color: var(--primary-color);
+        }
+
+        #main-container .row-container .cell:not(.cell--left-header):not(.cell--top-header):hover {
+          cursor: pointer;
+          box-shadow: 1px 1px 7px #999999;
         }
 
         #main-container .row-container .cell.cell--weekend {
@@ -92,21 +114,28 @@ class CasperCalendar extends PolymerElement {
       </style>
       <div id="main-container">
         <div class="row-container">
+          <!--Year selector-->
           <div class="cell cell--left-header cell--year-header">
             <casper-icon icon="fa-light:chevron-double-left" on-click="__decrementYear"></casper-icon>
             [[year]]
             <casper-icon icon="fa-light:chevron-double-right" on-click="__incrementYear"></casper-icon>
           </div>
+
+          <!--Week days column headers-->
           <template is="dom-repeat" items="[[__weekDays]]" as="weekDay">
             <div class$="cell cell--top-header [[__isWeekend(weekDay.weekDay)]]">[[weekDay.weekDayName]]</div>
           </template>
         </div>
 
-        <template is="dom-repeat" items="[[__monthsWeekdays]]" as="monthWeekdays">
+        <template is="dom-repeat" items="[[__months]]" as="month">
           <div class="row-container">
-            <div class="cell cell--left-header">[[monthWeekdays.month]]</div>
+            <div class="cell cell--left-header">[[month.name]]</div>
             <template is="dom-repeat" items="[[__getDaysForMonth(index)]]" as="monthDay">
-              <div class$="cell [[__isWeekend(monthDay.dayWeek)]]">[[monthDay.day]]</div>
+              <div
+                on-click="__cellClicked"
+                data-month$="[[month.index]]"
+                data-day$="[[monthDay.index]]"
+                class$="cell [[__isWeekend(monthDay.weekDay)]]">[[monthDay.index]]</div>
             </template>
           </div>
         </template>
@@ -115,46 +144,49 @@ class CasperCalendar extends PolymerElement {
   }
 
   __yearChanged () {
-    const monthsWeekdays = [];
+    const months = [];
     this.__numberOfColumns = 31;
 
     const yearFirstWeekDay = new Date(this.year, 0, 1).getDay();
 
     for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
-      monthsWeekdays.push({ month: moment.months()[monthIndex].substring(0, 3) });
+      months.push({
+        index: monthIndex,
+        name: moment.months()[monthIndex].substring(0, 3),
+      });
 
       // Get the month's number of days and its first week day.
       const firstDayOfMonth = moment(new Date(this.year, monthIndex, 1));
       const monthNumberOfDays = firstDayOfMonth.daysInMonth();
       const monthFirstWeekDay = firstDayOfMonth.day();
 
+      // Get all the weekdays for every single day of the month.
       const monthDays = [];
-      for (let dayIndex = 1; dayIndex <= monthNumberOfDays; dayIndex++) {
+      for (let dayIndex = 0; dayIndex < monthNumberOfDays; dayIndex++) {
         monthDays.push({
-          day: dayIndex,
-          dayWeek: dayIndex === 1
-            ? firstDayOfMonth.day()
-            : firstDayOfMonth.add(1, 'days').day()
+          index: dayIndex + 1,
+          weekDay: (monthFirstWeekDay + dayIndex) % 7
         });
       }
 
       if (yearFirstWeekDay === monthFirstWeekDay) {
-        monthsWeekdays[monthIndex].days = monthDays;
+        months[monthIndex].days = monthDays;
       } else {
         // Calculate how many days between the year's first week day and this month's first week day.
         let offset = monthFirstWeekDay >= yearFirstWeekDay
           ? monthFirstWeekDay - yearFirstWeekDay
           : monthFirstWeekDay + (7 - yearFirstWeekDay);
 
-        monthsWeekdays[monthIndex].days = new Array(offset).concat(monthDays);
+        months[monthIndex].days = new Array(offset).concat(monthDays);
       }
     }
 
-    this.__numberOfColumns = Math.max(...monthsWeekdays.map(monthWeekdays => monthWeekdays.days.length));
+    this.__numberOfColumns = Math.max(...months.map(monthWeekdays => monthWeekdays.days.length));
 
+    // Build the weekdays that will appear at the top of the page taking into account the first day of the year.
     const weekDays = [];
     for (let columnIndex = 0; columnIndex < this.__numberOfColumns; columnIndex++) {
-      let currentWeekday = (yearFirstWeekDay + columnIndex) % 7;
+      const currentWeekday = (yearFirstWeekDay + columnIndex) % 7;
 
       weekDays.push({
         weekDay: currentWeekday,
@@ -162,11 +194,11 @@ class CasperCalendar extends PolymerElement {
       });
     }
 
-    this.set('__weekDays', []);
-    this.set('__monthsWeekdays', []);
+    this.__months = [];
+    this.__weekDays = [];
     afterNextRender(this, () => {
-      this.set('__weekDays', weekDays);
-      this.set('__monthsWeekdays', monthsWeekdays);
+      this.__months = months;
+      this.__weekDays = weekDays;
     });
   }
 
@@ -175,10 +207,10 @@ class CasperCalendar extends PolymerElement {
    *
    * @param {Number} month The month whose week days will be returned.
    */
-  __getDaysForMonth (index) {
-    return this.__monthsWeekdays[month].days.length === this.__numberOfColumns
-      ? this.__monthsWeekdays[month].days
-      : this.__monthsWeekdays[month].days.concat(new Array(this.__numberOfColumns - this.__monthsWeekdays[month].days.length));
+  __getDaysForMonth (month) {
+    return this.__months[month].days.length === this.__numberOfColumns
+      ? this.__months[month].days
+      : this.__months[month].days.concat(new Array(this.__numberOfColumns - this.__months[month].days.length));
   }
 
   /**
@@ -203,6 +235,34 @@ class CasperCalendar extends PolymerElement {
    */
   __isWeekend (weekDay) {
     return weekDay === 0 || weekDay === 6 ? 'cell--weekend' : '';
+  }
+
+  /**
+   * This method is invoked when one cell is clicked which will activate the current date.
+   *
+   * @param {Object} event The event's object.
+   */
+  __cellClicked (event) {
+    const cellDataset = event.target.dataset;
+
+    this.activeDate = new Date(this.year, cellDataset.month, cellDataset.day);
+  }
+
+  /**
+   * This method gets invoked when the active date changes and paints its corresponding cell.
+   */
+  __activeDateChanged () {
+    if (this.__activeCell) this.__activeCell.removeAttribute('active');
+
+    const activeCellSelector = `.cell[data-month="${this.activeDate.getMonth()}"][data-day="${this.activeDate.getDate()}"]`;
+    this.__activeCell = this.shadowRoot.querySelector(activeCellSelector);
+
+    // This means the calendar is not yet fully rendered, so we postpone the remaining function.
+    if (!this.__activeCell) {
+      return afterNextRender(this, () => this.__activeDateChanged());
+    }
+
+    this.__activeCell.setAttribute('active', true);
   }
 }
 
