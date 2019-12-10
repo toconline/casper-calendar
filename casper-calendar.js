@@ -1,5 +1,6 @@
 import moment from 'moment/src/moment.js';
 import '@casper2020/casper-icons/casper-icon.js';
+import { templatize } from '@polymer/polymer/lib/utils/templatize.js';
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
 import { afterNextRender } from '@polymer/polymer/lib/utils/render-status.js';
 
@@ -51,6 +52,24 @@ class CasperCalendar extends PolymerElement {
         observer: '__activeDateRangeChanged',
         notify: true
       },
+      items: {
+        type: Array,
+        value: () => {
+          return [
+            [],
+            [],
+            [
+              { title: 'Teste 1', intervals: [{ start: 1, end: 2, tooltip: 'Tessste' }, { start: 11, end: 11 }]},
+              { title: 'Teste 2', intervals: [{ start: 5, end: 17 }]},
+              { title: 'Teste 3', intervals: [{ start: 24, end: 30 }, { start: 7, end: 17 }]},
+              { title: 'Teste 4', intervals: [{ start: 5, end: 10 }]},
+            ],
+            [{ title: 'Teste', intervals: [{ start: 5, end: 10 }]}],
+            [{ title: 'Teste', intervals: [{ start: 5, end: 10 }]}],
+            [{ title: 'Teste', intervals: [{ start: 5, end: 10 }]}],
+          ];
+        }
+      },
       __holidays: {
         type: Array,
         value: () => {
@@ -85,7 +104,8 @@ class CasperCalendar extends PolymerElement {
         }
 
         #main-container .row-container {
-          display: flex;
+          display: none;
+          grid-template-rows: 30px;
         }
 
         #main-container .row-container .cell {
@@ -98,8 +118,7 @@ class CasperCalendar extends PolymerElement {
           font-size: 14px;
           position: relative;
           box-sizing: border-box;
-          border-left: 1px #F2F2F2 solid;
-          border-bottom: 1px #F2F2F2 solid;
+          border: 1px #F2F2F2 solid;
         }
 
         #main-container .row-container .cell:not(.cell--left-header):not(.cell--top-header)[active] {
@@ -123,15 +142,31 @@ class CasperCalendar extends PolymerElement {
         }
 
         #main-container .row-container .cell.cell--left-header {
-          flex-grow: 0;
-          flex-shrink: 0;
-          flex-basis: 10%;
-          height: 30px;
           padding: 0 10px;
           align-items: center;
           justify-content: space-between;
           background-color: #E4E4E4;
           color: var(--primary-color);
+        }
+
+        #main-container .row-container .cell.cell--left-header .month-items {
+          display: flex;
+          cursor: pointer;
+          align-items: center;
+        }
+
+        #main-container .row-container .cell.cell--left-header .month-items:hover {
+          color: var(--dark-primary-color);
+        }
+
+        #main-container .row-container .cell.cell--left-header .month-items casper-icon {
+          width: 15px;
+          height: 15px;
+          --casper-icon-fill-color: var(--primary-color);
+        }
+
+        #main-container .row-container .cell.cell--left-header .month-items:hover casper-icon {
+          --casper-icon-fill-color: var(--dark-primary-color);
         }
 
         #main-container .row-container .cell.cell--left-header.cell--year-header {
@@ -176,6 +211,37 @@ class CasperCalendar extends PolymerElement {
           justify-content: center;
           background-color: #FF5000;
         }
+
+        /* Item row styling */
+        .item-row-container {
+          display: grid;
+          grid-template-rows: 30px;
+        }
+
+        .item-row-container:hover {
+          background-color: rgba(200, 200, 200, 0.1);
+        }
+
+        .item-row-container > div {
+          box-sizing: border-box;
+          border: 1px #F2F2F2 solid;
+        }
+
+        .item-row-container > div:first-of-type {
+          flex-grow: 0;
+          flex-shrink: 0;
+          flex-basis: 10%;
+          padding: 0 10px;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          color: var(--primary-color);
+        }
+
+        .item-row-container > div:not(:first-of-type) {
+          flex: 1;
+          height: 30px;
+        }
       </style>
       <div id="main-container">
         <div class="row-container">
@@ -192,28 +258,51 @@ class CasperCalendar extends PolymerElement {
           </template>
         </div>
 
-        <template is="dom-repeat" items="[[__months]]" as="month" id="templateRepeat">
-          <div class="row-container">
-            <div class="cell cell--left-header">[[month.name]]</div>
-            <template is="dom-repeat" items="[[__getDaysForMonth(index)]]" as="monthDay">
-              <div
-                data-year$="[[year]]"
-                data-month$="[[month.index]]"
-                data-day$="[[monthDay.index]]"
-                on-click="__cellClicked"
-                on-mouseup="__cellOnMouseUp"
-                on-mousedown="__cellOnMouseDown"
-                on-mouseenter="__cellOnMouseEnter"
-                class$="cell [[__isWeekend(monthDay.weekDay)]]">
-                  [[monthDay.index]]
-                  <template is="dom-if" if="[[__isHoliday(month.index, monthDay.index)]]">
-                    <span tooltip="[[__holidayTooltip(month.index, monthDay.index)]]" class="holiday">F</span>
-                  </template>
+        <div on-mouseleave="__cellContainerOnMouseLeave">
+          <template is="dom-repeat" items="[[__months]]" as="month" id="templateRepeat">
+            <div class="row-container">
+              <!--Month left column header-->
+              <div class="cell cell--left-header">
+                [[month.name]]
+
+                <template is="dom-if" if="[[__monthHasItems(month.index)]]">
+                  <div class="month-items" on-click="__expandOrCollapseMonthItems" data-month$="[[month.index]]">
+                    <casper-icon icon="fa-solid:caret-right"></casper-icon>
+                    [[__getItemsCountForMonth(month.index)]]
+                  </div>
+                </template>
                 </div>
-            </template>
-          </div>
-        </template>
+
+              <template is="dom-repeat" items="[[__getMonthDays(index)]]" as="monthDay">
+                <div
+                  data-year$="[[year]]"
+                  data-month$="[[month.index]]"
+                  data-day$="[[monthDay.index]]"
+                  on-click="__cellClicked"
+                  on-mouseup="__cellOnMouseUp"
+                  on-mousedown="__cellOnMouseDown"
+                  on-mouseenter="__cellOnMouseEnter"
+                  class$="cell [[__isWeekend(monthDay.weekDay)]]">
+                    [[monthDay.index]]
+                    <!--Holiday-->
+                    <template is="dom-if" if="[[__isHoliday(month.index, monthDay.index)]]">
+                      <span tooltip="[[__holidayTooltip(month.index, monthDay.index)]]" class="holiday">F</span>
+                    </template>
+                  </div>
+              </template>
+            </div>
+          </template>
+        </div>
       </div>
+
+      <template id="item-row-template">
+        <div style$="[[rowContainerStyle]]" class="item-row-container">
+          <div>[[title]]</div>
+          <template is="dom-repeat" items="[[intervals]]" as="interval">
+            <div style$="[[interval.styles]]" tooltip="[[interval.tooltip]]"></div>
+          </template>
+        </div>
+      </template>
     `;
   }
 
@@ -221,17 +310,17 @@ class CasperCalendar extends PolymerElement {
     super.ready();
 
     this.addEventListener('mousemove', event => this.app.tooltip.mouseMoveToolip(event));
-    this.addEventListener('mouseout', () => {
-      if (this.__isUserSelectingRange) {
-        this.__cellOnMouseUp();
-      }
-    });
-
     this.$.templateRepeat.addEventListener('dom-change', () => {
       afterNextRender(this, () => {
+        this.shadowRoot.querySelectorAll('.row-container').forEach(rowContainer => {
+          rowContainer.style.display = 'grid';
+          rowContainer.style.gridTemplateColumns = `10% repeat(${this.__numberOfColumns}, 1fr)`;
+        });
+
         this.__paintTodayCell();
         this.__paintActiveDateCell(true);
         this.__paintActiveDateRangeCells(true);
+
       });
     });
   }
@@ -359,7 +448,7 @@ class CasperCalendar extends PolymerElement {
    *
    * @param {Number} month The month whose week days will be returned.
    */
-  __getDaysForMonth (month) {
+  __getMonthDays (month) {
     return this.__months[month].days.length === this.__numberOfColumns
       ? this.__months[month].days
       : this.__months[month].days.concat(new Array(this.__numberOfColumns - this.__months[month].days.length));
@@ -403,9 +492,14 @@ class CasperCalendar extends PolymerElement {
    * @param {Object} event The event's object.
    */
   __cellClicked (event) {
-    const cellDataset = event.target.dataset;
+    // This means, it's an empty day used as padding.
+    if (!Object.keys(event.target.dataset).includes('day')) return;
 
-    this.activeDate = new Date(this.year, cellDataset.month, cellDataset.day);
+    this.activeDate = new Date(
+      this.year,
+      event.target.dataset.month,
+      event.target.dataset.day
+    );
   }
 
   /**
@@ -414,6 +508,9 @@ class CasperCalendar extends PolymerElement {
    * @param {Object} event The event's object.
    */
   __cellOnMouseDown (event) {
+    // This means, it's an empty day used as padding.
+    if (!Object.keys(event.target.dataset).includes('day')) return;
+
     this.__removeActiveAttributeFromCells();
 
     this.__isUserHoldingMouseButton = true;
@@ -458,6 +555,16 @@ class CasperCalendar extends PolymerElement {
         startRange: this.__activeRangeStart.toDate(),
         endRange: this.__activeRangeEnd.toDate(),
       });
+    }
+  }
+
+  /**
+   * This method is invoked when the user abandons the cell container and interrupts the date range selection
+   * if he's currently selecting one.
+   */
+  __cellContainerOnMouseLeave () {
+    if (this.__isUserSelectingRange) {
+      this.__cellOnMouseUp();
     }
   }
 
@@ -559,6 +666,85 @@ class CasperCalendar extends PolymerElement {
     this[propertyLockName] = true;
     this[propertyName] = propertyValue;
     this[propertyLockName] = false;
+  }
+
+  /**
+   * This method returns a boolean indicating if a specified month has items or not.
+   *
+   * @param {Number} month The month that will be checked to see if it has items.
+   */
+  __monthHasItems (month) {
+    return this.items && this.items.length > month && this.items[month].length > 0;
+  }
+
+  /**
+   * This method returns all the items for a specified month.
+   *
+   * @param {Number} month The month whose items will be returned.
+   */
+  __getMonthItems (month) {
+    return this.items && this.items.length > month && this.items[month].length > 0 ? this.items[month] : [];
+  }
+
+  /**
+   * This method returns how many items a specified item has.
+   *
+   * @param {Number} month The month whose items count will be returned.
+   */
+  __getItemsCountForMonth (month) {
+    return this.items && this.items.length > month ? this.items[month].length : 0;
+  }
+
+  __expandOrCollapseMonthItems (event) {
+    const monthRowElement = event.composedPath().find(element => element.classList && element.classList.contains('row-container'));
+    const itemsToggleElement = event.composedPath().find(element => element.classList && element.classList.contains('month-items'));
+
+    const month = parseInt(itemsToggleElement.dataset.month);
+    const monthDays = this.__getMonthDays(month);
+    const monthItems = this.__getMonthItems(month);
+
+    const documentFragment = new DocumentFragment();
+
+    // Loop through all the items.
+    for (let itemCount = 0; itemCount < monthItems.length; itemCount++) {
+      const currentItemIntervals = [];
+      const currentItem = monthItems[itemCount];
+
+      // Loop through all the month days, including the days used as padding to ensure the alignment of the cells.
+      for (let dayCount = 0; dayCount < monthDays.length; dayCount++) {
+        // This means, it's an empty day used as padding.
+        if (!monthDays[dayCount]) {
+          currentItemIntervals.push({});
+          continue;
+        };
+
+        const currentDay = monthDays[dayCount].index;
+        const currentDayInterval = currentItem.intervals.find(interval => interval.start <= currentDay && interval.end >= currentDay);
+
+        if (!currentDayInterval) {
+          currentItemIntervals.push({});
+        } else if (currentDayInterval.start === currentDay) {
+          currentItemIntervals.push({
+            tooltip: currentDayInterval.tooltip,
+            styles: `
+              background-color: rgba(var(--primary-color-rgb), 0.3);
+              grid-column: span ${currentDayInterval.end - currentDayInterval.start + 1};
+            `
+          });
+        }
+      }
+
+      const ItemRowTemplateClass = templatize(this.$['item-row-template']);
+      const templateInstance = new ItemRowTemplateClass({
+        title: currentItem.title,
+        intervals: currentItemIntervals,
+        rowContainerStyle: `grid-template-columns: 10% repeat(${this.__numberOfColumns}, 1fr)`
+      });
+
+      documentFragment.appendChild(templateInstance.root);
+    }
+
+    monthRowElement.parentElement.insertBefore(documentFragment, monthRowElement.nextElementSibling);
   }
 }
 
