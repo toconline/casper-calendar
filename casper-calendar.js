@@ -453,8 +453,8 @@ class CasperCalendar extends PolymerElement {
     if (this.__isUserSelectingRange) {
       this.__isUserSelectingRange = false;
 
-      this.__internallyChangeActiveDate(undefined);
-      this.__internallyChangeActiveDateRange({
+      this.__internallyChangeProperty('activeDate', undefined);
+      this.__internallyChangeProperty('activeDateRange', {
         startRange: this.__activeRangeStart.toDate(),
         endRange: this.__activeRangeEnd.toDate(),
       });
@@ -477,7 +477,7 @@ class CasperCalendar extends PolymerElement {
       return;
     }
 
-    this.__internallyChangeActiveDateRange(undefined);
+    this.__internallyChangeProperty('activeDateRange', undefined);
     this.__paintActiveDateCell();
   }
 
@@ -494,7 +494,7 @@ class CasperCalendar extends PolymerElement {
     // This means the active date range was changed internally.
     if (this.__activeDateRangeLock) return;
 
-    this.__internallyChangeActiveDate(undefined);
+    this.__internallyChangeProperty('activeDate', undefined);
     this.__paintActiveDateRangeCells();
   }
 
@@ -549,25 +549,16 @@ class CasperCalendar extends PolymerElement {
   }
 
   /**
-   * This method is used to internally change the value of the active date "without" triggering its observer.
-   *
-   * @param {Date} activeDate The new activeDate value.
-   */
-  __internallyChangeActiveDate (activeDate) {
-    this.__activeDateLock = true;
-    this.activeDate = activeDate;
-    this.__activeDateLock = false;
-  }
-
-  /**
-   * This method is used to internally change the value of the active date range "without" triggering its observer.
+   * This method is used to internally change the value of a property "without" triggering its observer.
    *
    * @param {Object} activeDateRange The new activeDate value.
    */
-  __internallyChangeActiveDateRange (activeDateRange) {
-    this.__activeDateRangeLock = true;
-    this.activeDateRange = activeDateRange;
-    this.__activeDateRangeLock = false;
+  __internallyChangeProperty (propertyName, propertyValue) {
+    const propertyLockName = `__${propertyName}Lock`;
+
+    this[propertyLockName] = true;
+    this[propertyName] = propertyValue;
+    this[propertyLockName] = false;
   }
 }
 
