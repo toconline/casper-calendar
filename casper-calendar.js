@@ -89,6 +89,15 @@ class CasperCalendar extends PolymerElement {
       __activeCells: {
         type: Array,
         value: []
+      },
+      /**
+       * This array contains the rows that are currently expanded.
+       *
+       * @type {Array}
+       */
+      __expandedMonths: {
+        type: Array,
+        value: []
       }
     }
   }
@@ -149,23 +158,23 @@ class CasperCalendar extends PolymerElement {
           color: var(--primary-color);
         }
 
-        #main-container .row-container .cell.cell--left-header .month-items {
+        #main-container .row-container .cell.cell--left-header .month-items-toggle {
           display: flex;
           cursor: pointer;
           align-items: center;
         }
 
-        #main-container .row-container .cell.cell--left-header .month-items:hover {
+        #main-container .row-container .cell.cell--left-header .month-items-toggle:hover {
           color: var(--dark-primary-color);
         }
 
-        #main-container .row-container .cell.cell--left-header .month-items casper-icon {
+        #main-container .row-container .cell.cell--left-header .month-items-toggle casper-icon {
           width: 15px;
           height: 15px;
           --casper-icon-fill-color: var(--primary-color);
         }
 
-        #main-container .row-container .cell.cell--left-header .month-items:hover casper-icon {
+        #main-container .row-container .cell.cell--left-header .month-items-toggle:hover casper-icon {
           --casper-icon-fill-color: var(--dark-primary-color);
         }
 
@@ -258,45 +267,42 @@ class CasperCalendar extends PolymerElement {
           </template>
         </div>
 
-        <div on-mouseleave="__cellContainerOnMouseLeave">
-          <template is="dom-repeat" items="[[__months]]" as="month" id="templateRepeat">
-            <div class="row-container">
-              <!--Month left column header-->
-              <div class="cell cell--left-header">
-                [[month.name]]
+        <template is="dom-repeat" items="[[__months]]" as="month" id="templateRepeat">
+          <div class="row-container" data-month$="[[month.index]]">
+            <!--Month left column header-->
+            <div class="cell cell--left-header">
+              [[month.name]]
 
-                <template is="dom-if" if="[[__monthHasItems(month.index)]]">
-                  <div class="month-items" on-click="__expandOrCollapseMonthItems" data-month$="[[month.index]]">
-                    <casper-icon icon="fa-solid:caret-right"></casper-icon>
-                    [[__getItemsCountForMonth(month.index)]]
-                  </div>
-                </template>
+              <template is="dom-if" if="[[__monthHasItems(month.index)]]">
+                <div class="month-items-toggle" on-click="__expandOrCollapseMonthItems">
+                  <casper-icon icon="fa-solid:caret-right"></casper-icon>
+                  [[__getItemsCountForMonth(month.index)]]
                 </div>
-
-              <template is="dom-repeat" items="[[__getMonthDays(index)]]" as="monthDay">
-                <div
-                  data-year$="[[year]]"
-                  data-month$="[[month.index]]"
-                  data-day$="[[monthDay.index]]"
-                  on-click="__cellClicked"
-                  on-mouseup="__cellOnMouseUp"
-                  on-mousedown="__cellOnMouseDown"
-                  on-mouseenter="__cellOnMouseEnter"
-                  class$="cell [[__isWeekend(monthDay.weekDay)]]">
-                    [[monthDay.index]]
-                    <!--Holiday-->
-                    <template is="dom-if" if="[[__isHoliday(month.index, monthDay.index)]]">
-                      <span tooltip="[[__holidayTooltip(month.index, monthDay.index)]]" class="holiday">F</span>
-                    </template>
-                  </div>
               </template>
-            </div>
-          </template>
-        </div>
+              </div>
+
+            <template is="dom-repeat" items="[[__getMonthDays(index)]]" as="monthDay">
+              <div
+                data-year$="[[year]]"
+                data-month$="[[month.index]]"
+                data-day$="[[monthDay.index]]"
+                on-mouseup="__cellOnMouseUp"
+                on-mousedown="__cellOnMouseDown"
+                on-mouseenter="__cellOnMouseEnter"
+                class$="cell [[__isWeekend(monthDay.weekDay)]]">
+                  [[monthDay.index]]
+                  <!--Holiday-->
+                  <template is="dom-if" if="[[__isHoliday(month.index, monthDay.index)]]">
+                    <span tooltip="[[__holidayTooltip(month.index, monthDay.index)]]" class="holiday">F</span>
+                  </template>
+                </div>
+            </template>
+          </div>
+        </template>
       </div>
 
       <template id="item-row-template">
-        <div style$="[[rowContainerStyle]]" class="item-row-container">
+        <div style$="[[itemRowContainerStyle]]" class="item-row-container">
           <div>[[title]]</div>
           <template is="dom-repeat" items="[[intervals]]" as="interval">
             <div style$="[[interval.styles]]" tooltip="[[interval.tooltip]]"></div>
@@ -462,7 +468,7 @@ class CasperCalendar extends PolymerElement {
   }
 
   /**
-   * This method decrementes the current year by one.
+   * This method decrements the current year by one.
    */
   __decrementYear () {
     this.year--;
@@ -487,29 +493,14 @@ class CasperCalendar extends PolymerElement {
   }
 
   /**
-   * This method is invoked when one cell is clicked which will activate the current date.
-   *
-   * @param {Object} event The event's object.
-   */
-  __cellClicked (event) {
-    // This means, it's an empty day used as padding.
-    if (!Object.keys(event.target.dataset).includes('day')) return;
-
-    this.activeDate = new Date(
-      this.year,
-      event.target.dataset.month,
-      event.target.dataset.day
-    );
-  }
-
-  /**
    * This method gets invoked when the user presses the mouse key down on top of a cell.
    *
    * @param {Object} event The event's object.
    */
   __cellOnMouseDown (event) {
-    // This means, it's an empty day used as padding.
-    if (!Object.keys(event.target.dataset).includes('day')) return;
+    // This means it's an empty day used as padding or the user has entered the limbo state where he was selecting
+    // a range but then left the component.
+    if (!Object.keys(event.target.dataset).includes('day') || this.__isUserSelectingRange) return;
 
     this.__removeActiveAttributeFromCells();
 
@@ -545,16 +536,29 @@ class CasperCalendar extends PolymerElement {
   /**
    * This method is invoked when the user releases the mouse key and therefore we set the __isSelectingInterval to false.
    */
-  __cellOnMouseUp () {
+  __cellOnMouseUp (event) {
+    // This means, it's an empty day used as padding.
+    if (!Object.keys(event.target.dataset).includes('day')) return;
+
     this.__isUserHoldingMouseButton = false;
+
     if (this.__isUserSelectingRange) {
       this.__isUserSelectingRange = false;
 
+      // Sort the two dates to make sure the interval start is not "smaller" than its end.
+      const sortedRangeDates = [this.__activeRangeStart,this.__activeRangeEnd].sort((a, b) => a.diff(b));
+
       this.__internallyChangeProperty('activeDate', undefined);
       this.__internallyChangeProperty('activeDateRange', {
-        startRange: this.__activeRangeStart.toDate(),
-        endRange: this.__activeRangeEnd.toDate(),
+        startRange: sortedRangeDates[0].toDate(),
+        endRange: sortedRangeDates[1].toDate(),
       });
+    } else {
+      this.activeDate = new Date(
+        this.year,
+        event.target.dataset.month,
+        event.target.dataset.day
+      );
     }
   }
 
@@ -696,10 +700,21 @@ class CasperCalendar extends PolymerElement {
   }
 
   __expandOrCollapseMonthItems (event) {
-    const monthRowElement = event.composedPath().find(element => element.classList && element.classList.contains('row-container'));
-    const itemsToggleElement = event.composedPath().find(element => element.classList && element.classList.contains('month-items'));
+    const rowContainer = event.composedPath().find(element => element.classList && element.classList.contains('row-container'));
 
-    const month = parseInt(itemsToggleElement.dataset.month);
+    if (!this.__expandedMonths.includes(parseInt(rowContainer.dataset.month))) {
+      this.__expandMonth(rowContainer);
+      rowContainer.querySelector('.month-items-toggle casper-icon').icon = 'fa-solid:caret-down';
+    } else {
+      this.__collapseMonth(rowContainer);
+      rowContainer.querySelector('.month-items-toggle casper-icon').icon = 'fa-solid:caret-right';
+    }
+  }
+
+  __expandMonth (rowContainer) {
+    const month = parseInt(rowContainer.dataset.month);
+    this.__expandedMonths.push(month);
+
     const monthDays = this.__getMonthDays(month);
     const monthItems = this.__getMonthItems(month);
 
@@ -738,13 +753,26 @@ class CasperCalendar extends PolymerElement {
       const templateInstance = new ItemRowTemplateClass({
         title: currentItem.title,
         intervals: currentItemIntervals,
-        rowContainerStyle: `grid-template-columns: 10% repeat(${this.__numberOfColumns}, 1fr)`
+        itemRowContainerStyle: `grid-template-columns: 10% repeat(${this.__numberOfColumns}, 1fr)`
       });
 
       documentFragment.appendChild(templateInstance.root);
     }
 
-    monthRowElement.parentElement.insertBefore(documentFragment, monthRowElement.nextElementSibling);
+    rowContainer.parentElement.insertBefore(documentFragment, rowContainer.nextElementSibling);
+  }
+
+  __collapseMonth (rowContainer) {
+    this.__expandedMonths = this.__expandedMonths.filter(expandedMonth => expandedMonth !== parseInt(rowContainer.dataset.month));
+
+    while (rowContainer.nextElementSibling) {
+      if (rowContainer.nextElementSibling.classList.contains('item-row-container')) {
+        rowContainer.parentElement.removeChild(rowContainer.nextElementSibling);
+        continue;
+      }
+
+      break;
+    }
   }
 }
 
