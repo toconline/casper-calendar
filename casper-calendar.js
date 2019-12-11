@@ -52,34 +52,25 @@ class CasperCalendar extends PolymerElement {
         observer: '__activeDateRangeChanged',
         notify: true
       },
+      /**
+       * The list of items for each month of the current year.
+       *
+       * @type {Array}
+       */
       items: {
         type: Array,
-        value: () => {
-          return [
-            [],
-            [],
-            [
-              { title: 'Teste 1', intervals: [{ start: 1, end: 2, tooltip: 'Tessste' }, { start: 11, end: 11 }]},
-              { title: 'Teste 2', intervals: [{ start: 5, end: 17 }]},
-              { title: 'Teste 3', intervals: [{ start: 24, end: 30 }, { start: 7, end: 17 }]},
-              { title: 'Teste 4', intervals: [{ start: 5, end: 10 }]},
-            ],
-            [{ title: 'Teste', intervals: [{ start: 5, end: 10 }]}],
-            [{ title: 'Teste', intervals: [{ start: 5, end: 10 }]}],
-            [{ title: 'Teste', intervals: [{ start: 5, end: 10 }]}],
-          ];
-        }
+        value: [],
+        observer: '__itemsChanged'
       },
-      __holidays: {
+      /**
+       * This property contains the list of holidays for the calendar.
+       *
+       * @type {Array}
+       */
+      holidays: {
         type: Array,
-        value: () => {
-          return [
-            { name: 'Natal', date: new Date(2019, 11, 25) },
-            { name: 'Dia de Implementação da República', date: new Date(2019, 9, 5) },
-            { name: 'Revolução 25 de Abril', date: new Date(2019, 3, 25) },
-            { name: 'Dia de Portugal', date: new Date(2019, 5, 10) },
-          ];
-        }
+        value: [],
+        observer: '__holidaysChanged'
       },
       /**
        * This array contains the cells that are currently painted in the page.
@@ -102,7 +93,7 @@ class CasperCalendar extends PolymerElement {
     }
   }
 
-  static get template() {
+  static get template () {
     return html`
       <style>
         #main-container {
@@ -270,16 +261,7 @@ class CasperCalendar extends PolymerElement {
         <template is="dom-repeat" items="[[__months]]" as="month" id="templateRepeat">
           <div class="row-container" data-month$="[[month.index]]">
             <!--Month left column header-->
-            <div class="cell cell--left-header">
-              [[month.name]]
-
-              <template is="dom-if" if="[[__monthHasItems(month.index)]]">
-                <div class="month-items-toggle" on-click="__expandOrCollapseMonthItems">
-                  <casper-icon icon="fa-solid:caret-right"></casper-icon>
-                  [[__getItemsCountForMonth(month.index)]]
-                </div>
-              </template>
-              </div>
+            <div class="cell cell--left-header">[[month.name]]</div>
 
             <template is="dom-repeat" items="[[__getMonthDays(index)]]" as="monthDay">
               <div
@@ -291,11 +273,7 @@ class CasperCalendar extends PolymerElement {
                 on-mouseenter="__cellOnMouseEnter"
                 class$="cell [[__isWeekend(monthDay.weekDay)]]">
                   [[monthDay.index]]
-                  <!--Holiday-->
-                  <template is="dom-if" if="[[__isHoliday(month.index, monthDay.index)]]">
-                    <span tooltip="[[__holidayTooltip(month.index, monthDay.index)]]" class="holiday">F</span>
-                  </template>
-                </div>
+              </div>
             </template>
           </div>
         </template>
@@ -318,17 +296,109 @@ class CasperCalendar extends PolymerElement {
     this.addEventListener('mousemove', event => this.app.tooltip.mouseMoveToolip(event));
     this.$.templateRepeat.addEventListener('dom-change', () => {
       afterNextRender(this, () => {
+        // Apply the grid styling taking into account the number of columns.
         this.shadowRoot.querySelectorAll('.row-container').forEach(rowContainer => {
           rowContainer.style.display = 'grid';
           rowContainer.style.gridTemplateColumns = `10% repeat(${this.__numberOfColumns}, 1fr)`;
         });
 
         this.__paintTodayCell();
+        this.__paintHolidayCells();
         this.__paintActiveDateCell(true);
         this.__paintActiveDateRangeCells(true);
-
       });
     });
+  }
+
+  /**
+   * This method either collapses / expands the current month.
+   *
+   * @param {Number} month The month that will be collapsed / expanded.
+   */
+  expandOrCollapseMonth (month) {
+    !this.__expandedMonths.includes(month)
+      ? this.expandMonth(month)
+      : this.collapseMonth(month);
+  }
+
+  /**
+   * This method will expand the current month if it has items.
+   *
+   * @param {Number} month The month that will be expanded.
+   */
+  expandMonth (month) {
+    const monthDays = this.__getMonthDays(month);
+    const monthItems = this.__getMonthItems(month);
+
+    // This means the month is already expanded or has no items.
+    if (this.__expandedMonths.includes(month) || monthItems.length === 0) return;
+    this.__expandedMonths.push(month);
+
+    const documentFragment = new DocumentFragment();
+
+    // Loop through all the items.
+    for (let itemCount = 0; itemCount < monthItems.length; itemCount++) {
+      const currentItemIntervals = [];
+      const currentItem = monthItems[itemCount];
+
+      // Loop through all the month days, including the days used as padding to ensure the alignment of the cells.
+      for (let dayCount = 0; dayCount < monthDays.length; dayCount++) {
+        // This means, it's an empty day used as padding.
+        if (!monthDays[dayCount]) {
+          currentItemIntervals.push({});
+          continue;
+        };
+
+        const currentDay = monthDays[dayCount].index;
+        const currentDayInterval = currentItem.intervals.find(interval => interval.start <= currentDay && interval.end >= currentDay);
+
+        if (!currentDayInterval) {
+          currentItemIntervals.push({});
+        } else if (currentDayInterval.start === currentDay) {
+          currentItemIntervals.push({
+            tooltip: currentDayInterval.tooltip,
+            styles: `
+              background-color: rgba(var(--primary-color-rgb), 0.3);
+              grid-column: span ${currentDayInterval.end - currentDayInterval.start + 1};
+            `
+          });
+        }
+      }
+
+      const ItemRowTemplateClass = templatize(this.$['item-row-template']);
+      const templateInstance = new ItemRowTemplateClass({
+        title: currentItem.title,
+        intervals: currentItemIntervals,
+        itemRowContainerStyle: `grid-template-columns: 10% repeat(${this.__numberOfColumns}, 1fr)`
+      });
+
+      documentFragment.appendChild(templateInstance.root);
+    }
+
+    const rowContainer = this.shadowRoot.querySelector(`.row-container[data-month="${month}"]`);
+    rowContainer.parentElement.insertBefore(documentFragment, rowContainer.nextElementSibling);
+    rowContainer.querySelector('.month-items-toggle casper-icon').icon = 'fa-solid:caret-down';
+  }
+
+  /**
+   * This method will collapse the current month.
+   *
+   * @param {Number} month The month that will be collapsed.
+   */
+  collapseMonth (month) {
+    this.__expandedMonths = this.__expandedMonths.filter(expandedMonth => expandedMonth !== month);
+
+    const rowContainer = this.shadowRoot.querySelector(`.row-container[data-month="${month}"]`);
+    rowContainer.querySelector('.month-items-toggle casper-icon').icon = 'fa-solid:caret-right';
+
+    while (rowContainer.nextElementSibling) {
+      if (rowContainer.nextElementSibling.classList.contains('item-row-container')) {
+        rowContainer.parentElement.removeChild(rowContainer.nextElementSibling);
+        continue;
+      }
+
+      break;
+    }
   }
 
   /**
@@ -345,6 +415,23 @@ class CasperCalendar extends PolymerElement {
     );
 
     if (todayCell) todayCell.classList.add('cell--today');
+  }
+
+  /**
+   * This method paints the cells that have associated holidays.
+   */
+  __paintHolidayCells () {
+    this.shadowRoot.querySelectorAll('span.holiday').forEach(holidaySpan => holidaySpan.remove());
+
+    this.holidays.forEach(holiday => {
+      const holidaySpanElement = document.createElement('span');
+      holidaySpanElement.className = 'holiday';
+      holidaySpanElement.innerText = 'F';
+      holidaySpanElement.tooltip = holiday.name;
+
+      const holidayCell = this.__findCellByYearMonthAndDay(this.year, parseInt(holiday.month) - 1, holiday.day);
+      holidayCell.appendChild(holidaySpanElement);
+    });
   }
 
   /**
@@ -461,6 +548,15 @@ class CasperCalendar extends PolymerElement {
   }
 
   /**
+   * This method returns all the items for a specified month.
+   *
+   * @param {Number} month The month whose items will be returned.
+   */
+  __getMonthItems (month) {
+    return this.items && this.items.length > month && this.items[month].length > 0 ? this.items[month] : [];
+  }
+
+  /**
    * This method increments the current year by one.
    */
   __incrementYear () {
@@ -482,14 +578,6 @@ class CasperCalendar extends PolymerElement {
    */
   __isWeekend (weekDay) {
     return weekDay === 0 || weekDay === 6 ? 'cell--weekend' : '';
-  }
-
-  __isHoliday (month, day) {
-    return this.__holidays.some(holiday => holiday.date.getMonth() === month && holiday.date.getDate() === day);
-  }
-
-  __holidayTooltip (month, day) {
-    return this.__holidays.find(holiday => holiday.date.getMonth() === month && holiday.date.getDate() === day).name;
   }
 
   /**
@@ -563,16 +651,6 @@ class CasperCalendar extends PolymerElement {
   }
 
   /**
-   * This method is invoked when the user abandons the cell container and interrupts the date range selection
-   * if he's currently selecting one.
-   */
-  __cellContainerOnMouseLeave () {
-    if (this.__isUserSelectingRange) {
-      this.__cellOnMouseUp();
-    }
-  }
-
-  /**
    * This method gets invoked when the active date changes and paints its corresponding cell.
    *
    * @param {Date} activeDate The current active date.
@@ -607,6 +685,38 @@ class CasperCalendar extends PolymerElement {
 
     this.__internallyChangeProperty('activeDate', undefined);
     this.__paintActiveDateRangeCells();
+  }
+
+  /**
+   * This method gets invoked when the property holidays changes.
+   */
+  __holidaysChanged () {
+    this.__paintHolidayCells();
+  }
+
+  /**
+   * This method gets invoked when the property items changes.
+   */
+  __itemsChanged () {
+    this.shadowRoot.querySelectorAll('.month-items-toggle').forEach(itemsToggleElement => itemsToggleElement.remove());
+
+    this.items.forEach((item, month) => {
+      if (item.length === 0) return;
+
+      const itemsToggleIconElement = document.createElement('casper-icon');
+      itemsToggleIconElement.icon = 'fa-solid:caret-right';
+
+      const itemsToggleContainerElement = document.createElement('div');
+      itemsToggleContainerElement.className = 'month-items-toggle';
+      itemsToggleContainerElement.appendChild(itemsToggleIconElement);
+      itemsToggleContainerElement.appendChild(document.createTextNode(item.length));
+      itemsToggleContainerElement.addEventListener('click', event => {
+        const rowContainer = event.composedPath().find(element => element.classList && element.classList.contains('row-container'));
+        this.expandOrCollapseMonth(parseInt(rowContainer.dataset.month));
+      });
+
+      this.shadowRoot.querySelector(`.row-container[data-month="${month}"] .cell--left-header`).appendChild(itemsToggleContainerElement);
+    });
   }
 
   /**
@@ -670,109 +780,6 @@ class CasperCalendar extends PolymerElement {
     this[propertyLockName] = true;
     this[propertyName] = propertyValue;
     this[propertyLockName] = false;
-  }
-
-  /**
-   * This method returns a boolean indicating if a specified month has items or not.
-   *
-   * @param {Number} month The month that will be checked to see if it has items.
-   */
-  __monthHasItems (month) {
-    return this.items && this.items.length > month && this.items[month].length > 0;
-  }
-
-  /**
-   * This method returns all the items for a specified month.
-   *
-   * @param {Number} month The month whose items will be returned.
-   */
-  __getMonthItems (month) {
-    return this.items && this.items.length > month && this.items[month].length > 0 ? this.items[month] : [];
-  }
-
-  /**
-   * This method returns how many items a specified item has.
-   *
-   * @param {Number} month The month whose items count will be returned.
-   */
-  __getItemsCountForMonth (month) {
-    return this.items && this.items.length > month ? this.items[month].length : 0;
-  }
-
-  __expandOrCollapseMonthItems (event) {
-    const rowContainer = event.composedPath().find(element => element.classList && element.classList.contains('row-container'));
-
-    if (!this.__expandedMonths.includes(parseInt(rowContainer.dataset.month))) {
-      this.__expandMonth(rowContainer);
-      rowContainer.querySelector('.month-items-toggle casper-icon').icon = 'fa-solid:caret-down';
-    } else {
-      this.__collapseMonth(rowContainer);
-      rowContainer.querySelector('.month-items-toggle casper-icon').icon = 'fa-solid:caret-right';
-    }
-  }
-
-  __expandMonth (rowContainer) {
-    const month = parseInt(rowContainer.dataset.month);
-    this.__expandedMonths.push(month);
-
-    const monthDays = this.__getMonthDays(month);
-    const monthItems = this.__getMonthItems(month);
-
-    const documentFragment = new DocumentFragment();
-
-    // Loop through all the items.
-    for (let itemCount = 0; itemCount < monthItems.length; itemCount++) {
-      const currentItemIntervals = [];
-      const currentItem = monthItems[itemCount];
-
-      // Loop through all the month days, including the days used as padding to ensure the alignment of the cells.
-      for (let dayCount = 0; dayCount < monthDays.length; dayCount++) {
-        // This means, it's an empty day used as padding.
-        if (!monthDays[dayCount]) {
-          currentItemIntervals.push({});
-          continue;
-        };
-
-        const currentDay = monthDays[dayCount].index;
-        const currentDayInterval = currentItem.intervals.find(interval => interval.start <= currentDay && interval.end >= currentDay);
-
-        if (!currentDayInterval) {
-          currentItemIntervals.push({});
-        } else if (currentDayInterval.start === currentDay) {
-          currentItemIntervals.push({
-            tooltip: currentDayInterval.tooltip,
-            styles: `
-              background-color: rgba(var(--primary-color-rgb), 0.3);
-              grid-column: span ${currentDayInterval.end - currentDayInterval.start + 1};
-            `
-          });
-        }
-      }
-
-      const ItemRowTemplateClass = templatize(this.$['item-row-template']);
-      const templateInstance = new ItemRowTemplateClass({
-        title: currentItem.title,
-        intervals: currentItemIntervals,
-        itemRowContainerStyle: `grid-template-columns: 10% repeat(${this.__numberOfColumns}, 1fr)`
-      });
-
-      documentFragment.appendChild(templateInstance.root);
-    }
-
-    rowContainer.parentElement.insertBefore(documentFragment, rowContainer.nextElementSibling);
-  }
-
-  __collapseMonth (rowContainer) {
-    this.__expandedMonths = this.__expandedMonths.filter(expandedMonth => expandedMonth !== parseInt(rowContainer.dataset.month));
-
-    while (rowContainer.nextElementSibling) {
-      if (rowContainer.nextElementSibling.classList.contains('item-row-container')) {
-        rowContainer.parentElement.removeChild(rowContainer.nextElementSibling);
-        continue;
-      }
-
-      break;
-    }
   }
 }
 
