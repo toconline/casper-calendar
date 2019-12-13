@@ -63,14 +63,13 @@ class CasperCalendar extends PolymerElement {
         observer: '__itemsChanged'
       },
       /**
-       * This property contains the list of holidays for the calendar.
+       * This property contains the resource that will return the list of holidays for the calendar.
        *
        * @type {Array}
        */
-      holidays: {
-        type: Array,
-        value: [],
-        observer: '__holidaysChanged'
+      holidaysJsonApiResource: {
+        type: String,
+        observer: '__holidaysJsonApiResourceChanged'
       },
       /**
        * This array contains the cells that are currently painted in the page.
@@ -78,6 +77,13 @@ class CasperCalendar extends PolymerElement {
        * @type {Array}
        */
       __activeCells: {
+        type: Array,
+        value: []
+      },
+      /**
+       * This array contains the list of holidays.
+       */
+      __holidays: {
         type: Array,
         value: []
       },
@@ -423,14 +429,17 @@ class CasperCalendar extends PolymerElement {
   __paintHolidayCells () {
     this.shadowRoot.querySelectorAll('span.holiday').forEach(holidaySpan => holidaySpan.remove());
 
-    this.holidays.forEach(holiday => {
-      const holidaySpanElement = document.createElement('span');
-      holidaySpanElement.className = 'holiday';
-      holidaySpanElement.innerText = 'F';
-      holidaySpanElement.tooltip = holiday.name;
+    this.__holidays.forEach(holiday => {
+      const holidayCell = this.__findCellByYearMonthAndDay(this.year, holiday.month - 1, holiday.day);
 
-      const holidayCell = this.__findCellByYearMonthAndDay(this.year, parseInt(holiday.month) - 1, holiday.day);
-      holidayCell.appendChild(holidaySpanElement);
+      if (holidayCell) {
+        const holidaySpanElement = document.createElement('span');
+        holidaySpanElement.className = 'holiday';
+        holidaySpanElement.innerText = 'F';
+        holidaySpanElement.tooltip = holiday.description;
+
+        holidayCell.appendChild(holidaySpanElement);
+      }
     });
   }
 
@@ -478,6 +487,9 @@ class CasperCalendar extends PolymerElement {
    * @param {Number} year The current year.
    */
   __yearChanged (year) {
+    // Fetch holidays for the current year.
+    this.__holidaysJsonApiResourceChanged();
+
     const months = [];
     this.__numberOfColumns = 31;
 
@@ -690,8 +702,21 @@ class CasperCalendar extends PolymerElement {
   /**
    * This method gets invoked when the property holidays changes.
    */
-  __holidaysChanged () {
-    this.__paintHolidayCells();
+  async __holidaysJsonApiResourceChanged () {
+    try {
+      const holidaysJsonApiResource = this.holidaysJsonApiResource.includes('?')
+        ? `${this.holidaysJsonApiResource}&filter[year]=${this.year}`
+        : `${this.holidaysJsonApiResource}?filter[year]=${this.year}`;
+
+      const socketResponse = await this.app.socket.jget(holidaysJsonApiResource);
+
+      this.__holidays = socketResponse.data;
+      this.__paintHolidayCells();
+    } catch (error) {
+      console.error(error);
+
+      this.app.openToast({ text: 'Ocorreu um erro ao obter os dados.', backgroundColor: 'red' });
+    }
   }
 
   /**
