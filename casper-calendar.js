@@ -168,11 +168,11 @@ class CasperCalendar extends PolymerElement {
         #main-container .row-container .cell.cell--left-header .month-items-toggle casper-icon {
           width: 15px;
           height: 15px;
-          --casper-icon-fill-color: var(--primary-color);
+          color: var(--primary-color);
         }
 
         #main-container .row-container .cell.cell--left-header .month-items-toggle:hover casper-icon {
-          --casper-icon-fill-color: var(--dark-primary-color);
+          color: var(--dark-primary-color);
         }
 
         #main-container .row-container .cell.cell--left-header.cell--year-header {
@@ -183,7 +183,7 @@ class CasperCalendar extends PolymerElement {
           width: 15px;
           height: 15px;
           cursor: pointer;
-          --casper-icon-fill-color: var(--primary-color);
+          color: var(--primary-color);
         }
 
         #main-container .row-container .cell.cell--top-header {
@@ -487,9 +487,6 @@ class CasperCalendar extends PolymerElement {
    * @param {Number} year The current year.
    */
   __yearChanged (year) {
-    // Fetch holidays for the current year.
-    this.__holidaysJsonApiResourceChanged();
-
     const months = [];
     this.__numberOfColumns = 31;
 
@@ -540,11 +537,14 @@ class CasperCalendar extends PolymerElement {
       });
     }
 
-    this.__months = [];
-    this.__weekDays = [];
+    this.__months = this.__weekDays = this.__holidays = [];
+
     afterNextRender(this, () => {
       this.__months = months;
       this.__weekDays = weekDays;
+
+      // Fetch holidays for the current year.
+      this.__holidaysJsonApiResourceChanged();
     });
   }
 
@@ -646,7 +646,7 @@ class CasperCalendar extends PolymerElement {
       this.__isUserSelectingRange = false;
 
       // Sort the two dates to make sure the interval start is not "smaller" than its end.
-      const sortedRangeDates = [this.__activeRangeStart,this.__activeRangeEnd].sort((a, b) => a.diff(b));
+      const sortedRangeDates = [this.__activeRangeStart, this.__activeRangeEnd].sort((a, b) => a.diff(b));
 
       this.__internallyChangeProperty('activeDate', undefined);
       this.__internallyChangeProperty('activeDateRange', {
