@@ -356,17 +356,33 @@ class CasperCalendar extends PolymerElement {
         };
 
         const currentDay = monthDays[dayCount].index;
-        const currentDayInterval = currentItem.intervals.find(interval => interval.start <= currentDay && interval.end >= currentDay);
 
-        if (!currentDayInterval) {
+        let currentIntervalDay;
+
+        // Each interval is an array of days ([1, 2, 3, { day: 4, halfDay: true, onlyMorning: true }]) for instance.
+        const currentInterval = currentItem.intervals.find(interval => {
+          currentIntervalDay = interval.days.find(intervalDay => {
+            return intervalDay.constructor !== Object
+              ? intervalDay === currentDay
+              : intervalDay.day === currentDay;
+          });
+
+          return currentIntervalDay;
+        });
+
+        if (!currentInterval) {
           currentItemIntervals.push({});
-        } else if (currentDayInterval.start === currentDay) {
+        } else {
+          let currentIntervalStyles = 'background-color: rgba(var(--primary-color-rgb), 0.3);'
+          if (currentIntervalDay.constructor === Object && currentIntervalDay.halfDay) {
+            currentIntervalStyles = currentIntervalDay.onlyMorning
+              ? `${currentIntervalStyles} height: 50%;`
+              : `${currentIntervalStyles} height: 50%; align-self: end;`;
+          }
+
           currentItemIntervals.push({
-            tooltip: currentDayInterval.tooltip,
-            styles: `
-              background-color: rgba(var(--primary-color-rgb), 0.3);
-              grid-column: span ${currentDayInterval.end - currentDayInterval.start + 1};
-            `
+            tooltip: currentInterval.tooltip,
+            styles: currentIntervalStyles
           });
         }
       }
@@ -703,6 +719,8 @@ class CasperCalendar extends PolymerElement {
    * This method gets invoked when the property holidays changes.
    */
   async __holidaysJsonApiResourceChanged () {
+    if (!this.holidaysJsonApiResource) return;
+
     try {
       const holidaysJsonApiResource = this.holidaysJsonApiResource.includes('?')
         ? `${this.holidaysJsonApiResource}&filter[year]=${this.year}`
@@ -723,6 +741,8 @@ class CasperCalendar extends PolymerElement {
    * This method gets invoked when the property items changes.
    */
   __itemsChanged () {
+    this.__expandedMonths = [];
+    this.shadowRoot.querySelectorAll('.item-row-container').forEach(itemsRowContainer => itemsRowContainer.remove());
     this.shadowRoot.querySelectorAll('.month-items-toggle').forEach(itemsToggleElement => itemsToggleElement.remove());
 
     this.items.forEach((item, month) => {
