@@ -1,10 +1,13 @@
+import { CasperCalendarPaint } from './mixins/casper-calendar-paint.js';
+import { CasperCalendarMouseEvents } from './mixins/casper-calendar-mouse-events.js';
+
 import moment from 'moment/src/moment.js';
 import '@casper2020/casper-icons/casper-icon.js';
 import { templatize } from '@polymer/polymer/lib/utils/templatize.js';
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
 import { afterNextRender } from '@polymer/polymer/lib/utils/render-status.js';
 
-class CasperCalendar extends PolymerElement {
+class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(PolymerElement)) {
 
   static get is () {
     return 'casper-calendar';
@@ -32,25 +35,15 @@ class CasperCalendar extends PolymerElement {
         observer: '__yearChanged'
       },
       /**
-       * The date that is currently active.
-       *
-       * @type {Date}
-       */
-      activeDate: {
-        type: Object,
-        value: new Date(),
-        observer: '__activeDateChanged',
-        notify: true
-      },
-      /**
        * The date range that is currently active.
        *
-       * @type {Object}
+       * @type {Array}
        */
-      activeDateRange: {
-        type: Object,
-        observer: '__activeDateRangeChanged',
-        notify: true
+      activeDates: {
+        type: Array,
+        value: [],
+        notify: true,
+        observer: '__activeDatesChanged',
       },
       /**
        * The list of items for each month of the current year.
@@ -271,7 +264,6 @@ class CasperCalendar extends PolymerElement {
 
             <template is="dom-repeat" items="[[__getMonthDays(index)]]" as="monthDay">
               <div
-                data-year$="[[year]]"
                 data-month$="[[month.index]]"
                 data-day$="[[monthDay.index]]"
                 on-mouseup="__cellOnMouseUp"
@@ -297,6 +289,8 @@ class CasperCalendar extends PolymerElement {
   }
 
   ready () {
+    window.moment = moment;
+    window.calendar = this;
     super.ready();
 
     this.addEventListener('mousemove', event => this.app.tooltip.mouseMoveToolip(event));
@@ -309,9 +303,8 @@ class CasperCalendar extends PolymerElement {
         });
 
         this.__paintTodayCell();
+        this.__paintActiveDates();
         this.__paintHolidayCells();
-        this.__paintActiveDateCell(true);
-        this.__paintActiveDateRangeCells(true);
       });
     });
   }
@@ -353,50 +346,47 @@ class CasperCalendar extends PolymerElement {
         if (!monthDays[dayCount]) {
           currentItemIntervals.push({});
           continue;
-        };
+        }
 
         const currentDay = monthDays[dayCount].index;
-
-        let currentIntervalDay;
-
-        // Each interval is an array of days ([1, 2, 3, { day: 4, halfDay: true, onlyMorning: true }]) for instance.
-        const currentInterval = currentItem.intervals.find(interval => {
-          currentIntervalDay = interval.days.find(intervalDay => {
-            return intervalDay.constructor !== Object
-              ? intervalDay === currentDay
-              : intervalDay.day === currentDay;
-          });
-
-          return currentIntervalDay;
-        });
+        const currentInterval = currentItem.intervals.find(interval => interval.start <= currentDay && interval.end >= currentDay);
 
         if (!currentInterval) {
           currentItemIntervals.push({});
-        } else {
-          let currentIntervalStyles = 'background-color: rgba(var(--primary-color-rgb), 0.3);'
-          if (currentIntervalDay.constructor === Object && currentIntervalDay.halfDay) {
-            currentIntervalStyles = currentIntervalDay.onlyMorning
-              ? `${currentIntervalStyles} height: 50%;`
-              : `${currentIntervalStyles} height: 50%; align-self: end;`;
-          }
-
-          currentItemIntervals.push({
-            tooltip: currentInterval.tooltip,
-            styles: currentIntervalStyles
-          });
+          continue;
         }
+
+        // Since we span the the columns when drawing ranges, skip all the days but the first.
+        if (currentInterval.start !== currentDay) continue;
+
+        let currentIntervalStyles = `
+          grid-column: span ${currentInterval.end - currentInterval.start + 1};
+          background-color: rgba(var(--primary-color-rgb), 0.3);
+        `;
+
+        if (currentInterval.halfDay) {
+          currentIntervalStyles = currentInterval.onlyMorning
+            ? `${currentIntervalStyles} height: 50%;`
+            : `${currentIntervalStyles} height: 50%; align-self: end;`;
+        }
+
+        currentItemIntervals.push({
+          tooltip: currentInterval.tooltip,
+          styles: currentIntervalStyles
+        });
       }
 
       const ItemRowTemplateClass = templatize(this.$['item-row-template']);
       const templateInstance = new ItemRowTemplateClass({
         title: currentItem.title,
         intervals: currentItemIntervals,
-        itemRowContainerStyle: `grid-template-columns: 10% repeat(${this.__numberOfColumns}, 1fr)`
+        itemRowContainerStyle: `grid-template-columns: 10% repeat(${this.__numberOfColumns}, 1fr);`
       });
 
       documentFragment.appendChild(templateInstance.root);
     }
 
+    // Append the items row and change the toggle icon.
     const rowContainer = this.shadowRoot.querySelector(`.row-container[data-month="${month}"]`);
     rowContainer.parentElement.insertBefore(documentFragment, rowContainer.nextElementSibling);
     rowContainer.querySelector('.month-items-toggle casper-icon').icon = 'fa-solid:caret-down';
@@ -421,80 +411,6 @@ class CasperCalendar extends PolymerElement {
 
       break;
     }
-  }
-
-  /**
-   * This method paints the cell that represents the present day.
-   */
-  __paintTodayCell () {
-    const today = new Date();
-    if (today.getFullYear() !== this.year) return;
-
-    const todayCell = this.__findCellByYearMonthAndDay(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    );
-
-    if (todayCell) todayCell.classList.add('cell--today');
-  }
-
-  /**
-   * This method paints the cells that have associated holidays.
-   */
-  __paintHolidayCells () {
-    this.shadowRoot.querySelectorAll('span.holiday').forEach(holidaySpan => holidaySpan.remove());
-
-    this.__holidays.forEach(holiday => {
-      const holidayCell = this.__findCellByYearMonthAndDay(this.year, holiday.month - 1, holiday.day);
-
-      if (holidayCell) {
-        const holidaySpanElement = document.createElement('span');
-        holidaySpanElement.className = 'holiday';
-        holidaySpanElement.innerText = 'F';
-        holidaySpanElement.tooltip = holiday.description;
-
-        holidayCell.appendChild(holidaySpanElement);
-      }
-    });
-  }
-
-  /**
-   * This method paints the current active date cell.
-   *
-   * @param {Boolean} wasCalendarRedrawn This flag indicates if the method was invoked after the calendar was redrawn or not.
-   */
-  __paintActiveDateCell (wasCalendarRedrawn) {
-    if (!wasCalendarRedrawn) this.__removeActiveAttributeFromCells();
-
-    if (!this.activeDate || this.activeDate.getFullYear() !== this.year) return;
-
-    const activeDateCell = this.__findCellByYearMonthAndDay(
-      this.activeDate.getFullYear(),
-      this.activeDate.getMonth(),
-      this.activeDate.getDate()
-    );
-
-    if (activeDateCell) {
-      this.__activeCells.push(activeDateCell);
-      activeDateCell.setAttribute('active', '');
-    }
-  }
-
-  /**
-   * This method paints the current active date range cells.
-   *
-   * @param {Boolean} wasCalendarRedrawn This flag indicates if the method was invoked after the calendar was redrawn or not.
-   */
-  __paintActiveDateRangeCells (wasCalendarRedrawn) {
-    if (!wasCalendarRedrawn) this.__removeActiveAttributeFromCells();
-
-    if (!this.activeDateRange) return;
-
-    this.__paintDateRangeCells(
-      moment(this.activeDateRange.startRange),
-      moment(this.activeDateRange.endRange)
-    );
   }
 
   /**
@@ -609,110 +525,19 @@ class CasperCalendar extends PolymerElement {
   }
 
   /**
-   * This method gets invoked when the user presses the mouse key down on top of a cell.
-   *
-   * @param {Object} event The event's object.
+   * This method gets invoked when the active dates changes and paints their corresponding cells.
    */
-  __cellOnMouseDown (event) {
-    // This means it's an empty day used as padding or the user has entered the limbo state where he was selecting
-    // a range but then left the component.
-    if (!Object.keys(event.target.dataset).includes('day') || this.__isUserSelectingRange) return;
+  __activeDatesChanged () {
+    // This means the active dates were changed internally.
+    if (this.__activeDatesLock) return;
 
-    this.__removeActiveAttributeFromCells();
+    // Guarantee that all the objects are instances of the moment.
+    this.__internallyChangeProperty('activeDates', this.activeDates.map(activeDate => ({
+      start: moment.isMoment(activeDate.start) ? activeDate.start : moment(activeDate.start),
+      end: moment.isMoment(activeDate.end) ? activeDate.end : moment(activeDate.end),
+    })));
 
-    this.__isUserHoldingMouseButton = true;
-    this.__activeRangeStart = moment(new Date(
-      this.year,
-      event.composedPath().shift().dataset.month,
-      event.composedPath().shift().dataset.day
-    ));
-  }
-
-  /**
-   * This method gets invoked when the user hovers through a cell. If he is holding the mouse key down, the component
-   * will start to create an interval of dates painting the cells that are contained in the aforementioned interval.
-   *
-   * @param {Object} event The event's object.
-   */
-  __cellOnMouseEnter (event) {
-    if (!this.__isUserHoldingMouseButton) return;
-
-    this.__removeActiveAttributeFromCells();
-
-    this.__isUserSelectingRange = true;
-    this.__activeRangeEnd = moment(new Date(
-      this.year,
-      event.composedPath().shift().dataset.month,
-      event.composedPath().shift().dataset.day
-    ));
-
-    this.__paintDateRangeCells(this.__activeRangeStart, this.__activeRangeEnd);
-  }
-
-  /**
-   * This method is invoked when the user releases the mouse key and therefore we set the __isSelectingInterval to false.
-   */
-  __cellOnMouseUp (event) {
-    // This means, it's an empty day used as padding.
-    if (!Object.keys(event.target.dataset).includes('day')) return;
-
-    this.__isUserHoldingMouseButton = false;
-
-    if (this.__isUserSelectingRange) {
-      this.__isUserSelectingRange = false;
-
-      // Sort the two dates to make sure the interval start is not "smaller" than its end.
-      const sortedRangeDates = [this.__activeRangeStart, this.__activeRangeEnd].sort((a, b) => a.diff(b));
-
-      this.__internallyChangeProperty('activeDate', undefined);
-      this.__internallyChangeProperty('activeDateRange', {
-        startRange: sortedRangeDates[0].toDate(),
-        endRange: sortedRangeDates[1].toDate(),
-      });
-    } else {
-      this.activeDate = new Date(
-        this.year,
-        event.target.dataset.month,
-        event.target.dataset.day
-      );
-    }
-  }
-
-  /**
-   * This method gets invoked when the active date changes and paints its corresponding cell.
-   *
-   * @param {Date} activeDate The current active date.
-   */
-  __activeDateChanged (activeDate) {
-    if (activeDate && activeDate.constructor.name !== 'Date') {
-      return console.error('The activeDate property must be a valid Date object.');
-    }
-
-    // This means the active date was changed internally.
-    if (this.__activeDateLock) {
-      this.__activeDateLock = false;
-      return;
-    }
-
-    this.__internallyChangeProperty('activeDateRange', undefined);
-    this.__paintActiveDateCell();
-  }
-
-  /**
-   * This method gets invoked when the active date changes and paints its corresponding cell.
-   *
-   * @param {Date} activeDate The current active date.
-   */
-  __activeDateRangeChanged (activeDateRange) {
-    if (activeDateRange && (activeDateRange.constructor.name !== 'Object' || !activeDateRange.startRange || !activeDateRange.endRange)) {
-      return console.error('The activeRangeDate property must be an Object and contain the startRange / endRange keys.');
-    }
-
-    // This means the active date range was changed internally.
-    if (this.__activeDateRangeLock) return;
-
-    this.__internallyChangeProperty('activeDate', undefined);
-    this.__paintActiveDateRangeCells();
+    afterNextRender(this, () => { this.__paintActiveDates(); });
   }
 
   /**
@@ -765,59 +590,10 @@ class CasperCalendar extends PolymerElement {
   }
 
   /**
-   * This method queries the page for the cell which has a specific month and day.
-   *
-   * @param {Number} month The month that will be used in the cell's selector.
-   * @param {Number} day The day that will be used in the cell's selector.
-   */
-  __findCellByYearMonthAndDay (year, month, day) {
-    return this.shadowRoot.querySelector(`.cell[data-year="${year}"][data-month="${month}"][data-day="${day}"]`);
-  }
-
-  /**
-   * This method resets the currently painted cells.
-   */
-  __removeActiveAttributeFromCells () {
-    this.__activeCells.forEach(activeCell => activeCell.removeAttribute('active'));
-    this.__activeCells = [];
-  }
-
-  /**
-   * This function is used to paint the cells that are contained in a specific date range.
-   *
-   * @param {Date} rangeStart The range's start date.
-   * @param {Date} rangeEnd The range's end date.
-   */
-  __paintDateRangeCells (rangeStart, rangeEnd) {
-    if (rangeStart.year() > this.year || rangeEnd.year() < this.year) return;
-
-    const daysBetweenBothDates = rangeEnd.diff(rangeStart, 'days');
-
-    for (let daysCount = 0; daysCount <= Math.abs(daysBetweenBothDates); daysCount++) {
-      const currentDate = daysBetweenBothDates > 0
-        ? moment(rangeStart).add(daysCount, 'days')
-        : moment(rangeStart).subtract(daysCount, 'days');
-
-      // If a date interval spans over several years and the current date is not displayed, skip to the next iteration.
-      if (currentDate.year() !== this.year) continue;
-
-      const currentDateCell = this.__findCellByYearMonthAndDay(
-        currentDate.year(),
-        currentDate.month(),
-        currentDate.date()
-      );
-
-      if (currentDateCell) {
-        currentDateCell.setAttribute('active', '');
-        this.__activeCells.push(currentDateCell);
-      }
-    }
-  }
-
-  /**
    * This method is used to internally change the value of a property "without" triggering its observer.
    *
-   * @param {Object} activeDateRange The new activeDate value.
+   * @param {String} propertyName The name of the property that will be changed.
+   * @param {String | Number  | Boolean | Object} propertyValue The new value that the propery will have.
    */
   __internallyChangeProperty (propertyName, propertyValue) {
     const propertyLockName = `__${propertyName}Lock`;
@@ -825,6 +601,47 @@ class CasperCalendar extends PolymerElement {
     this[propertyLockName] = true;
     this[propertyName] = propertyValue;
     this[propertyLockName] = false;
+  }
+
+  /**
+   * This method adds a new active date to the list of existing ones and tries to merge the adjacent ones.
+   *
+   * @param {Object} newActiveDate The date that we'll be adding.
+   */
+  __mergeActiveDates (newActiveDate) {
+    const updatedActiveDates = [];
+
+    this.activeDates.forEach(activeDate => {
+      const activeDateEnd = moment(activeDate.end).add(1, 'days');
+      const activeDateStart = moment(activeDate.start).subtract(1, 'days');
+
+      if (
+        (newActiveDate.start.isSameOrBefore(activeDateStart) && newActiveDate.end.isSameOrAfter(activeDateEnd)) ||
+        (newActiveDate.start.isSameOrAfter(activeDateStart) && newActiveDate.start.isSameOrBefore(activeDateEnd) && newActiveDate.end.isSameOrAfter(activeDateEnd)) ||
+        (newActiveDate.start.isSameOrBefore(activeDateStart) && newActiveDate.end.isSameOrAfter(activeDateStart) && newActiveDate.end.isSameOrBefore(activeDateEnd))
+      ) {
+        // This means the two dates overlap so we merge them together.
+        newActiveDate = {
+          start: moment.min([newActiveDate.start, activeDate.start]),
+          end: moment.max([newActiveDate.end, activeDate.end]),
+        };
+      } else {
+        // In this case, since there was no overlap, push the unadulterated date.
+        updatedActiveDates.push(activeDate);
+      }
+    });
+
+    return [...updatedActiveDates, newActiveDate];
+  }
+
+  /**
+   * This method will look into the existing active dates and return the index of the one that contains the specified day.
+   *
+   * @param {Object} day The day we're trying to find.
+   */
+  __activeDateIndexOfDay (day) {
+    // The fourth parameter indicates that the comparison is inclusive.
+    return this.activeDates.findIndex(activeDate => day.isBetween(activeDate.start, activeDate.end, null, '[]'));
   }
 }
 
