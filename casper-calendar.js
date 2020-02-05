@@ -42,8 +42,7 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
       activeDates: {
         type: Array,
         value: [],
-        notify: true,
-        observer: '__activeDatesChanged',
+        notify: true
       },
       /**
        * The list of items for each month of the current year.
@@ -310,6 +309,27 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
   }
 
   /**
+   * This method sets the active dates and formats each one to contain the list of days.
+   *
+   * @param {Array} activeDates The list of active dates.
+   */
+  setActiveDates (activeDates) {
+    this.activeDates = activeDates.map(activeDate => {
+      // Guarantee that all the objects are instances of the moment.
+      const activeDateEnd = moment.isMoment(activeDate.end) ? activeDate.end : moment(activeDate.end);
+      const activeDateStart = moment.isMoment(activeDate.start) ? activeDate.start : moment(activeDate.start);
+
+      return {
+        start: activeDateStart,
+        end: activeDateEnd,
+        days: this.__getDaysBetweenDates(activeDateStart, activeDateEnd)
+      };
+    });
+
+    afterNextRender(this, () => { this.__paintActiveDates(); });
+  }
+
+  /**
    * This method either collapses / expands the current month.
    *
    * @param {Number} month The month that will be collapsed / expanded.
@@ -525,19 +545,23 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
   }
 
   /**
-   * This method gets invoked when the active dates changes and paints their corresponding cells.
+   * This method returns the list of days between two dates.
+   *
+   * @param {Object} startDate The start date.
+   * @param {Object} endDate The end date.
    */
-  __activeDatesChanged () {
-    // This means the active dates were changed internally.
-    if (this.__activeDatesLock) return;
+  __getDaysBetweenDates (startDate, endDate) {
+    const activeDateDays = [];
 
-    // Guarantee that all the objects are instances of the moment.
-    this.__internallyChangeProperty('activeDates', this.activeDates.map(activeDate => ({
-      start: moment.isMoment(activeDate.start) ? activeDate.start : moment(activeDate.start),
-      end: moment.isMoment(activeDate.end) ? activeDate.end : moment(activeDate.end),
-    })));
+    this.__executeForEachDayBetweenDates(currentDate => {
+      activeDateDays.push({
+        day: currentDate.date(),
+        month: currentDate.month(),
+        isWeekend: [0, 6].includes(currentDate.day()),
+      });
+    }, startDate, endDate);
 
-    afterNextRender(this, () => { this.__paintActiveDates(); });
+    return activeDateDays;
   }
 
   /**
@@ -631,7 +655,33 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
       }
     });
 
-    return [...updatedActiveDates, newActiveDate];
+    return [...updatedActiveDates, newActiveDate].map(activeDate => ({ ...activeDate, days: this.__getDaysBetweenDates(activeDate.start, activeDate.end) }));
+  }
+
+  /**
+   * This method will execute a callback for each day between two dates.
+   *
+   * @param {Function} callback The callback that will be executed for each day between both dates.
+   * @param {Object} startDate The start date.
+   * @param {Object} endDate The end date.
+   * @param {Boolean} skipDifferentYears This flag will decide if the callback will be invoked when we're iterating over an year that isn't the current one.
+   */
+  __executeForEachDayBetweenDates (callback, startDate, endDate, skipDifferentYears = false) {
+    // Sort both dates because the user can select the dates backwards.
+    const [sortedStartDate, sortedEndDate] = [startDate, endDate].sort((previousDate, nextDate) => previousDate.diff(nextDate));
+    const daysBetweenBothDates = sortedEndDate.diff(sortedStartDate, 'days');
+
+    for (let dayCount = 0; dayCount <= daysBetweenBothDates; dayCount++) {
+      const currentDate = moment(sortedStartDate).add(dayCount, 'days');
+
+      // Either skip to the next iteration if we're in previous years or exit if we already surpassed it.
+      if (skipDifferentYears) {
+        if (currentDate.year() < this.year) continue;
+        if (currentDate.year() > this.year) return;
+      }
+
+      callback(currentDate);
+    }
   }
 
   /**

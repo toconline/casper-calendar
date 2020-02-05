@@ -25,17 +25,8 @@ export const CasperCalendarPaint = superClass => {
       // If the interval starts on the following years or ends in the previous years.
       if (startDate.year() > this.year || endDate.year() < this.year) return;
 
-      // Sort the two dates to make sure the start is before than its end.
-      const [sortedStartDate, sortedEndDate] = [startDate, endDate].sort((previousDate, nextDate) => previousDate.diff(nextDate));
-      const daysBetweenBothDates = sortedEndDate.diff(sortedStartDate, 'days');
 
-      for (let daysCount = 0; daysCount <= daysBetweenBothDates; daysCount++) {
-        const currentDate = moment(sortedStartDate).add(daysCount, 'days');
-
-        // Either skip to the next iteration if we're not in the current year or return if we already surpassed it.
-        if (currentDate.year() < this.year) continue;
-        if (currentDate.year() > this.year) return;
-
+      this.__executeForEachDayBetweenDates(currentDate => {
         const currentDateCell = this.__findCellByMonthAndDay(currentDate.month(), currentDate.date());
         if (!currentDateCell) return;
 
@@ -45,7 +36,7 @@ export const CasperCalendarPaint = superClass => {
           // Only remove the active attribute from the cell, if there are no active dates that contain this day.
           currentDateCell.removeAttribute('active');
         }
-      }
+      }, startDate, endDate, true);
     }
 
     /**
