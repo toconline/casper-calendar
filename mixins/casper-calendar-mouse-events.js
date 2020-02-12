@@ -9,16 +9,18 @@ export const CasperCalendarMouseEvents = superClass => {
      * @param {Object} event The event's object.
      */
     __cellOnMouseDown (event) {
+      const eventTarget = event.composedPath().find(element => element.classList.contains('cell'));
+
       // This means it's an empty day used as padding or the user has entered the limbo state where he was selecting a date but then left the component.
-      if (!Object.keys(event.target.dataset).includes('day') || this.__isUserSelectingRange) return;
+      if (!Object.keys(eventTarget.dataset).includes('day') || this.__isUserSelectingRange) return;
 
       this.__isUserHoldingMouseButton = true;
 
       // Begin the date selection.
       this.__activeDateStart = moment(new Date(
         this.year,
-        event.composedPath().shift().dataset.month,
-        event.composedPath().shift().dataset.day
+        eventTarget.dataset.month,
+        eventTarget.dataset.day
       ));
     }
 
@@ -29,7 +31,9 @@ export const CasperCalendarMouseEvents = superClass => {
      * @param {Object} event The event's object.
      */
     __cellOnMouseEnter (event) {
-      if (!Object.keys(event.target.dataset).includes('day') || !this.__isUserHoldingMouseButton) return;
+      const eventTarget = event.composedPath().find(element => element.classList.contains('cell'));
+
+      if (!Object.keys(eventTarget.dataset).includes('day') || !this.__isUserHoldingMouseButton) return;
 
       // Only remove cells from the currently active range.
       if (this.__activeDateEnd) this.__paintDate(this.__activeDateStart, this.__activeDateEnd, false);
@@ -37,8 +41,8 @@ export const CasperCalendarMouseEvents = superClass => {
       this.__isUserSelectingRange = true;
       this.__activeDateEnd = moment(new Date(
         this.year,
-        event.composedPath().shift().dataset.month,
-        event.composedPath().shift().dataset.day
+        eventTarget.dataset.month,
+        eventTarget.dataset.day
       ));
 
       this.__paintDate(this.__activeDateStart, this.__activeDateEnd);
@@ -50,15 +54,17 @@ export const CasperCalendarMouseEvents = superClass => {
      * @param {Object} event The event's object.
      */
     __cellOnMouseUp (event) {
+      const eventTarget = event.composedPath().find(element => element.classList.contains('cell'));
+
       // This means, it's an empty day used as padding.
-      if (!Object.keys(event.target.dataset).includes('day')) return;
+      if (!Object.keys(eventTarget.dataset).includes('day')) return;
 
       this.__isUserHoldingMouseButton = false;
 
       const activeDateEnd = moment(new Date(
         this.year,
-        event.composedPath().shift().dataset.month,
-        event.composedPath().shift().dataset.day
+        eventTarget.dataset.month,
+        eventTarget.dataset.day
       ));
 
       // Sort the two dates to make sure the start is before than its end.
@@ -73,7 +79,7 @@ export const CasperCalendarMouseEvents = superClass => {
         const activeDateIndex = this.__activeDateIndexOfDay(newActiveDate.start);
 
         if (activeDateIndex === -1) {
-          event.target.setAttribute('active', '');
+          eventTarget.setAttribute('active', '');
           this.__internallyChangeProperty('activeDates', this.__mergeActiveDates(newActiveDate));
         } else {
           const deletedActiveDate = this.activeDates[activeDateIndex];

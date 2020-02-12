@@ -47,11 +47,11 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
       /**
        * The list of items for each month of the current year.
        *
-       * @type {Array}
+       * @type {Object}
        */
       items: {
-        type: Array,
-        value: [],
+        type: Object,
+        value: {},
         observer: '__itemsChanged'
       },
       /**
@@ -145,6 +145,18 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
           justify-content: space-between;
           background-color: #E4E4E4;
           color: var(--primary-color);
+        }
+
+        #main-container .row-container .cell.cell--has-item .cell-content {
+          background-color: rgba(var(--primary-color-rgb), 0.2);
+        }
+
+        #main-container .row-container .cell .cell-content {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         #main-container .row-container .cell.cell--left-header .month-items-toggle {
@@ -269,7 +281,7 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
                 on-mousedown="__cellOnMouseDown"
                 on-mouseenter="__cellOnMouseEnter"
                 class$="cell [[__isWeekend(monthDay.weekDay)]]">
-                  [[monthDay.index]]
+                  <div class="cell-content">[[monthDay.index]]</div>
               </div>
             </template>
           </div>
@@ -517,7 +529,7 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
    * @param {Number} month The month whose items will be returned.
    */
   __getMonthItems (month) {
-    return this.items && this.items.length > month && this.items[month].length > 0 ? this.items[month] : [];
+    return this.items && this.items.hasOwnProperty(month) ? this.items[month] : [];
   }
 
   /**
@@ -591,11 +603,22 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
    */
   __itemsChanged () {
     this.__expandedMonths = [];
-    this.shadowRoot.querySelectorAll('.item-row-container').forEach(itemsRowContainer => itemsRowContainer.remove());
-    this.shadowRoot.querySelectorAll('.month-items-toggle').forEach(itemsToggleElement => itemsToggleElement.remove());
+    this.shadowRoot.querySelectorAll('.item-row-container, .month-items-toggle').forEach(element => element.remove());
+    this.shadowRoot.querySelectorAll('.cell.cell--has-item').forEach(element => element.classList.remove('cell--has-item'));
 
-    this.items.forEach((item, month) => {
+    Object.entries(this.items).forEach(([month, item]) => {
       if (item.length === 0) return;
+
+      // Paint all the days in the calendar that have at least one interval associated with it.
+      item.forEach(itemEntry => {
+        if (!itemEntry.intervals || itemEntry.intervals.length === 0) return;
+
+        itemEntry.intervals.forEach(interval => {
+          for (let intervalDay = interval.start; intervalDay <= interval.end; intervalDay++) {
+            this.__findCellByMonthAndDay(month, intervalDay).classList.add('cell--has-item');
+          }
+        });
+      })
 
       const itemsToggleIconElement = document.createElement('casper-icon');
       itemsToggleIconElement.icon = 'fa-solid:caret-right';
@@ -655,7 +678,10 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
       }
     });
 
-    return [...updatedActiveDates, newActiveDate].map(activeDate => ({ ...activeDate, days: this.__getDaysBetweenDates(activeDate.start, activeDate.end) }));
+    return [...updatedActiveDates, newActiveDate].map(activeDate => ({
+      ...activeDate,
+      days: this.__getDaysBetweenDates(activeDate.start, activeDate.end)
+    }));
   }
 
   /**
