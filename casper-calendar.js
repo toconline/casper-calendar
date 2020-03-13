@@ -131,7 +131,7 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
           align-items: center;
           justify-content: center;
           border-radius: 3px;
-          font-size: 14px;
+          font-size: var(--casper-calendar--cell-font-size, 14px);
           position: relative;
           box-sizing: border-box;
           border: 1px #F2F2F2 solid;
