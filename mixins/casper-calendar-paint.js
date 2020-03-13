@@ -1,5 +1,3 @@
-import moment from 'moment/src/moment.js';
-
 export const CasperCalendarPaint = superClass => {
   return class extends superClass {
 
