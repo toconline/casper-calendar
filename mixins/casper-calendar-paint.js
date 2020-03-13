@@ -56,7 +56,7 @@ export const CasperCalendarPaint = superClass => {
       this.shadowRoot.querySelectorAll('span.holiday').forEach(holidaySpan => holidaySpan.remove());
 
       this.__holidays.forEach(holiday => {
-        const holidayCell = this.__findCellByYearMonthAndDay(this.year, holiday.month - 1, holiday.day);
+        const holidayCell = this.__findCellByMonthAndDay(holiday.month - 1, holiday.day);
 
         if (holidayCell) {
           const holidaySpanElement = document.createElement('span');
