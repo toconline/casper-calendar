@@ -64,6 +64,15 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
         observer: '__holidaysJsonApiResourceChanged'
       },
       /**
+       * When this flag is set to true, the buttons that navigate throughout the years disappear.
+       *
+       * @type {Boolean}
+       */
+      disableYearNavigation: {
+        type: Boolean,
+        value: false
+      },
+      /**
        * This array contains the cells that are currently painted in the page.
        *
        * @type {Array}
@@ -257,9 +266,13 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
         <div class="row-container">
           <!--Year selector-->
           <div class="cell cell--left-header cell--year-header">
-            <casper-icon icon="fa-light:chevron-double-left" on-click="__decrementYear"></casper-icon>
+            <template is="dom-if" if="[[!disableYearNavigation]]">
+              <casper-icon icon="fa-light:chevron-double-left" on-click="__decrementYear"></casper-icon>
+            </template>
             [[year]]
-            <casper-icon icon="fa-light:chevron-double-right" on-click="__incrementYear"></casper-icon>
+            <template is="dom-if" if="[[!disableYearNavigation]]">
+              <casper-icon icon="fa-light:chevron-double-right" on-click="__incrementYear"></casper-icon>
+            </template>
           </div>
 
           <!--Week days column headers-->
@@ -606,19 +619,19 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
     this.shadowRoot.querySelectorAll('.item-row-container, .month-items-toggle').forEach(element => element.remove());
     this.shadowRoot.querySelectorAll('.cell.cell--has-item').forEach(element => element.classList.remove('cell--has-item'));
 
-    Object.entries(this.items).forEach(([month, item]) => {
-      if (item.length === 0) return;
+    Object.entries(this.items).forEach(([month, items]) => {
+      if (items.length === 0) return;
 
       // Paint all the days in the calendar that have at least one interval associated with it.
-      item.forEach(itemEntry => {
-        if (!itemEntry.intervals || itemEntry.intervals.length === 0) return;
+      items.forEach(item => {
+        if (!item.intervals || item.intervals.length === 0) return;
 
-        itemEntry.intervals.forEach(interval => {
+        item.intervals.forEach(interval => {
           for (let intervalDay = interval.start; intervalDay <= interval.end; intervalDay++) {
             this.__findCellByMonthAndDay(month, intervalDay).classList.add('cell--has-item');
           }
         });
-      })
+      });
 
       const itemsToggleIconElement = document.createElement('casper-icon');
       itemsToggleIconElement.icon = 'fa-solid:caret-right';
@@ -626,7 +639,7 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
       const itemsToggleContainerElement = document.createElement('div');
       itemsToggleContainerElement.className = 'month-items-toggle';
       itemsToggleContainerElement.appendChild(itemsToggleIconElement);
-      itemsToggleContainerElement.appendChild(document.createTextNode(item.length));
+      itemsToggleContainerElement.appendChild(document.createTextNode(items.length));
       itemsToggleContainerElement.addEventListener('click', event => {
         const rowContainer = event.composedPath().find(element => element.classList && element.classList.contains('row-container'));
         this.expandOrCollapseMonth(parseInt(rowContainer.dataset.month));
