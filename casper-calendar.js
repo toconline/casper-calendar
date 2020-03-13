@@ -635,7 +635,10 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
       items.forEach(item => {
         if (!item.intervals || item.intervals.length === 0) return;
 
-        item.intervals.forEach(interval => {
+        item.intervals.forEach((interval, intervalIndex, intervals) => {
+          // If the interval doesn't contain the end property assume it is a one day interval.
+          intervals[intervalIndex].end = interval.end || interval.start;
+
           for (let intervalDay = interval.start; intervalDay <= interval.end; intervalDay++) {
             this.__findCellByMonthAndDay(month, intervalDay).classList.add('cell--has-item');
           }
