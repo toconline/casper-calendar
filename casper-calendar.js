@@ -59,9 +59,18 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
        *
        * @type {Array}
        */
-      holidaysJsonApiResource: {
+      holidaysResource: {
         type: String,
-        observer: '__holidaysJsonApiResourceChanged'
+        observer: '__holidaysResourceChanged'
+      },
+      /**
+       * This property contains the name of the JSON API resource property which represents the year we're fetching the holidays from.
+       *
+       * @type {String}
+       */
+      holidaysResourceYearFilter: {
+        type: String,
+        value: 'year'
       },
       /**
        * When this flag is set to true, the buttons that navigate throughout the years disappear.
@@ -521,7 +530,7 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
       this.__weekDays = weekDays;
 
       // Fetch holidays for the current year.
-      this.__holidaysJsonApiResourceChanged();
+      this.__holidaysResourceChanged();
     });
   }
 
@@ -592,15 +601,15 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
   /**
    * This method gets invoked when the property holidays changes.
    */
-  async __holidaysJsonApiResourceChanged () {
-    if (!this.holidaysJsonApiResource) return;
+  async __holidaysResourceChanged () {
+    if (!this.holidaysResource) return;
 
     try {
-      const holidaysJsonApiResource = this.holidaysJsonApiResource.includes('?')
-        ? `${this.holidaysJsonApiResource}&filter[year]=${this.year}`
-        : `${this.holidaysJsonApiResource}?filter[year]=${this.year}`;
+      const holidaysResource = this.holidaysResource.includes('?')
+        ? `${this.holidaysResource}&filter[${this.holidaysResourceYearFilter}]=${this.year}`
+        : `${this.holidaysResource}?filter[${this.holidaysResourceYearFilter}]=${this.year}`;
 
-      const socketResponse = await this.app.socket.jget(holidaysJsonApiResource);
+      const socketResponse = await this.app.socket.jget(holidaysResource);
 
       this.__holidays = socketResponse.data;
       this.__paintHolidayCells();
