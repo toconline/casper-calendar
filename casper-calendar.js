@@ -105,6 +105,15 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
       __expandedMonths: {
         type: Array,
         value: []
+      },
+      /**
+       * This flag states if the component is still in the middle of its first paint.
+       *
+       * @type {Boolean}
+       */
+      __isComponentInitializing: {
+        type: Boolean,
+        value: true
       }
     }
   }
@@ -322,19 +331,24 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
   }
 
   ready () {
-    window.moment = moment;
-    window.calendar = this;
     super.ready();
 
     this.addEventListener('mousemove', event => this.app.tooltip.mouseMoveToolip(event));
     this.$.templateRepeat.addEventListener('dom-change', () => {
       afterNextRender(this, () => {
+        const rows = this.shadowRoot.querySelectorAll('.row-container');
+
+        // Check if all the rows are already on the screen (the header one plus one for each month).
+        if (rows.length !== 13) return;
+        this.__isComponentInitializing = false;
+
         // Apply the grid styling taking into account the number of columns.
         this.shadowRoot.querySelectorAll('.row-container').forEach(rowContainer => {
           rowContainer.style.display = 'grid';
           rowContainer.style.gridTemplateColumns = `10% repeat(${this.__numberOfColumns}, 1fr)`;
         });
 
+        this.__itemsChanged();
         this.__paintTodayCell();
         this.__paintActiveDates();
         this.__paintHolidayCells();
@@ -629,6 +643,8 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
    * This method gets invoked when the property items changes.
    */
   __itemsChanged () {
+    if (this.__isComponentInitializing) return;
+
     this.__expandedMonths = [];
     this.shadowRoot.querySelectorAll('.item-row-container, .month-items-toggle').forEach(element => element.remove());
     this.shadowRoot.querySelectorAll('.cell.cell--has-item').forEach(element => element.classList.remove('cell--has-item'));
