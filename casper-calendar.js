@@ -413,9 +413,14 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
         // Since we span the the columns when drawing ranges, skip all the days but the first.
         if (currentInterval.start !== currentDay) continue;
 
+        // Decide the background color for the current interval.
+        let backgroundColor = 'rgba(var(--primary-color-rgb), 0.3)';
+        if (currentInterval.backgroundColor) backgroundColor = currentInterval.backgroundColor;
+        else if (currentItem.backgroundColor) backgroundColor = currentItem.backgroundColor;
+
         let currentIntervalStyles = `
+          background-color: ${backgroundColor};
           grid-column: span ${currentInterval.end - currentInterval.start + 1};
-          background-color: rgba(var(--primary-color-rgb), 0.3);
         `;
 
         if (currentInterval.halfDay) {
