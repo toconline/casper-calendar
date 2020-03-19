@@ -31,6 +31,7 @@ class CasperCalendar extends CasperCalendarPaint(CasperCalendarMouseEvents(Polym
        */
       year: {
         type: Number,
+        notify: true,
         value: new Date().getFullYear(),
         observer: '__yearChanged'
       },
