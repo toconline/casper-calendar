@@ -595,6 +595,20 @@ class CasperCalendar extends CasperCalendarItems(CasperCalendarPaint(CasperCalen
     // The fourth parameter indicates that the comparison is inclusive.
     return this.activeDates.findIndex(activeDate => day.isBetween(activeDate.start, activeDate.end, null, '[]'));
   }
+
+  /**
+   * This method is used to internally change the value of a property "without" triggering its observer.
+   *
+   * @param {String} propertyName The name of the property that will be changed.
+   * @param {String | Number  | Boolean | Object} propertyValue The new value that the propery will have.
+   */
+  __internallyChangeProperty (propertyName, propertyValue) {
+    const propertyLockName = `__${propertyName}Lock`;
+
+    this[propertyLockName] = true;
+    this[propertyName] = propertyValue;
+    this[propertyLockName] = false;
+  }
 }
 
 customElements.define(CasperCalendar.is, CasperCalendar);
