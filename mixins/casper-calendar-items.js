@@ -154,7 +154,8 @@ export const CasperCalendarItems = superClass => {
                 intervals: [{
                   [this.idInternalProperty]: itemIntervalIdentifier,
                   start: currentDate.date(),
-                  end: currentDate.date()
+                  end: currentDate.date(),
+                  tooltip: interval.tooltip
                 }]
               });
             } else {
@@ -165,7 +166,8 @@ export const CasperCalendarItems = superClass => {
                 : this.__itemsPerMonth[currentDate.month()][existingItemIndex].intervals.push({
                   [this.idInternalProperty]: itemIntervalIdentifier,
                   start: currentDate.date(),
-                  end: currentDate.date()
+                  end: currentDate.date(),
+                  tooltip: interval.tooltip
                 });
             }
           }
