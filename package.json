@@ -1,6 +1,6 @@
 {
   "name": "@casper2020/casper-calendar",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "dependencies": {
     "@polymer/polymer": "^3.0.0"
   }
