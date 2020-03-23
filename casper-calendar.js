@@ -542,6 +542,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
 
       if (
         (newActiveDate.start.isSameOrBefore(activeDateStart) && newActiveDate.end.isSameOrAfter(activeDateEnd)) ||
+        (newActiveDate.start.isSameOrAfter(activeDateStart) && newActiveDate.end.isSameOrBefore(activeDateEnd)) ||
         (newActiveDate.start.isSameOrAfter(activeDateStart) && newActiveDate.start.isSameOrBefore(activeDateEnd) && newActiveDate.end.isSameOrAfter(activeDateEnd)) ||
         (newActiveDate.start.isSameOrBefore(activeDateStart) && newActiveDate.end.isSameOrAfter(activeDateStart) && newActiveDate.end.isSameOrBefore(activeDateEnd))
       ) {
