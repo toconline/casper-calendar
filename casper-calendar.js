@@ -81,6 +81,17 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
         type: Boolean,
         value: false
       },
+      /**
+       * This property when set, limits the number of active dates can be selected simultaneously.
+       */
+      maximumNumberActiveDates: {
+        type: Number
+      },
+      /**
+       * Name of internal property that will be used to identify items and intervals.
+       *
+       * @type {String}
+       */
       idInternalProperty: {
         type: String,
         value: '__identifier'

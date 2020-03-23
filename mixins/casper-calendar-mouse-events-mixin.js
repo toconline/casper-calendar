@@ -72,30 +72,62 @@ export const CasperCalendarMouseEventsMixin = superClass => {
       const newActiveDate = { start: sortedDateStart, end: sortedDateEnd };
 
       if (this.__isUserSelectingRange) {
+        // This means the user stopped selecting a range.
         this.__isUserSelectingRange = false;
-        this.activeDates = this.__mergeActiveDates(newActiveDate);
+        this.__addActiveDate(newActiveDate);
       } else {
         // This means it was a click, so both the start and end date are equal.
         const activeDateIndex = this.__activeDateIndexOfDay(newActiveDate.start);
 
-        if (activeDateIndex === -1) {
-          eventTarget.setAttribute('active', '');
-          this.__internallyChangeProperty('activeDates', this.__mergeActiveDates(newActiveDate));
+        if (activeDateIndex !== -1) {
+          // The user clicked on an active date so we'll remove it from the list.
+          this.__removeActiveDate(activeDateIndex);
         } else {
-          const deletedActiveDate = this.activeDates[activeDateIndex];
-
-          // Remove the active date from the public property.
-          this.__internallyChangeProperty('activeDates', [
-            ...this.activeDates.slice(0, activeDateIndex),
-            ...this.activeDates.slice(activeDateIndex + 1, this.activeDates.length)]
-          );
-
-          this.__paintDate(deletedActiveDate.start, deletedActiveDate.end, false);
+          // The user clicked on a day that wasn't previously active so we'll try to add it to the list.
+          if (this.__addActiveDate(newActiveDate)) {
+            eventTarget.setAttribute('active', '');
+          }
         }
       }
 
       this.__activeDateEnd = undefined;
       this.__activeDateStart = undefined;
+    }
+
+    /**
+     * This method tries to add a new date taking into account the maximum number of simultaneous dates property.
+     *
+     * @param {Object} newActiveDate The new date we'll try to add.
+     */
+    __addActiveDate (newActiveDate) {
+      const mergedActiveDates = this.__mergeActiveDates(newActiveDate);
+
+      if (this.maximumNumberActiveDates === undefined || mergedActiveDates.length <= this.maximumNumberActiveDates) {
+        this.activeDates = mergedActiveDates;
+        return true;
+      }
+
+      // This means the new interval can't be added since it surpasses the limit of simultaneous intervals.
+      this.__paintDate(newActiveDate.start, newActiveDate.end, false);
+
+      this.app.openToast({ backgroundColor: 'red', text: `Só pode ter seleccionado ${this.maximumNumberActiveDates} intervalos(s) simultaneamente.` });
+    }
+
+    /**
+     * This method removes an active date by its index.
+     *
+     * @param {Number} activeDateIndex The index of the date we'll remove.
+     */
+    __removeActiveDate (activeDateIndex) {
+      const deletedActiveDate = this.activeDates[activeDateIndex];
+
+      // Remove the active date from the public property.
+      this.activeDates = [
+        ...this.activeDates.slice(0, activeDateIndex),
+        ...this.activeDates.slice(activeDateIndex + 1, this.activeDates.length)
+      ];
+
+      this.__paintDate(deletedActiveDate.start, deletedActiveDate.end, false);
     }
   }
 };
