@@ -10,6 +10,7 @@ export const CasperCalendarMouseEventsMixin = superClass => {
      */
     __cellOnMouseDown (event) {
       const eventTarget = event.composedPath().find(element => element.classList.contains('cell'));
+      console.log(!Object.keys(eventTarget.dataset).includes('day'));
 
       // This means it's an empty day used as padding or the user has entered the limbo state where he was selecting a date but then left the component.
       if (!Object.keys(eventTarget.dataset).includes('day') || this.__isUserSelectingRange) return;
@@ -61,14 +62,13 @@ export const CasperCalendarMouseEventsMixin = superClass => {
 
       this.__isUserHoldingMouseButton = false;
 
-      const activeDateEnd = moment(new Date(
-        this.year,
-        eventTarget.dataset.month,
-        eventTarget.dataset.day
-      ));
+      const activeDateEnd = moment(new Date(this.year, eventTarget.dataset.month, eventTarget.dataset.day));
+
+      // This happens if, for instance, the user starts dragging out of nowhere and ends up in a cell.
+      const activeDateStart = this.__activeDateStart || moment(activeDateEnd);
 
       // Sort the two dates to make sure the start is before than its end.
-      const [sortedDateStart, sortedDateEnd] = [this.__activeDateStart, activeDateEnd].sort((a, b) => a.diff(b));
+      const [sortedDateStart, sortedDateEnd] = [activeDateStart, activeDateEnd].sort((a, b) => a.diff(b));
       const newActiveDate = { start: sortedDateStart, end: sortedDateEnd };
 
       if (this.__isUserSelectingRange) {
@@ -110,7 +110,7 @@ export const CasperCalendarMouseEventsMixin = superClass => {
       // This means the new interval can't be added since it surpasses the limit of simultaneous intervals.
       this.__paintDate(newActiveDate.start, newActiveDate.end, false);
 
-      this.app.openToast({ backgroundColor: 'red', text: `Só pode ter seleccionado ${this.maximumNumberActiveDates} intervalos(s) simultaneamente.` });
+      this.app.openToast({ backgroundColor: 'red', text: `Só pode ter seleccionado ${this.maximumNumberActiveDates} intervalo(s) simultaneamente.` });
     }
 
     /**
