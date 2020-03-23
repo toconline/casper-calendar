@@ -1,13 +1,13 @@
-import { CasperCalendarItems } from './mixins/casper-calendar-items.js';
-import { CasperCalendarPaint } from './mixins/casper-calendar-paint.js';
-import { CasperCalendarMouseEvents } from './mixins/casper-calendar-mouse-events.js';
+import { CasperCalendarItemsMixin } from './mixins/casper-calendar-items-mixin.js';
+import { CasperCalendarPaintMixin } from './mixins/casper-calendar-paint-mixin.js';
+import { CasperCalendarMouseEventsMixin } from './mixins/casper-calendar-mouse-events-mixin.js';
 
 import moment from 'moment/src/moment.js';
 import '@casper2020/casper-icons/casper-icon.js';
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
 import { afterNextRender } from '@polymer/polymer/lib/utils/render-status.js';
 
-class CasperCalendar extends CasperCalendarItems(CasperCalendarPaint(CasperCalendarMouseEvents(PolymerElement))) {
+class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(CasperCalendarMouseEventsMixin(PolymerElement))) {
 
   static get is () {
     return 'casper-calendar';
@@ -52,7 +52,6 @@ class CasperCalendar extends CasperCalendarItems(CasperCalendarPaint(CasperCalen
        */
       items: {
         type: Object,
-        value: {},
         observer: '__itemsChanged'
       },
       /**
@@ -85,15 +84,6 @@ class CasperCalendar extends CasperCalendarItems(CasperCalendarPaint(CasperCalen
       idInternalProperty: {
         type: String,
         value: '__identifier'
-      },
-      /**
-       * This array contains the cells that are currently painted in the page.
-       *
-       * @type {Array}
-       */
-      __activeCells: {
-        type: Array,
-        value: []
       },
       /**
        * This array contains the list of holidays.
@@ -337,6 +327,7 @@ class CasperCalendar extends CasperCalendarItems(CasperCalendarPaint(CasperCalen
 
   ready () {
     super.ready();
+    window.calendar = this;
 
     this.addEventListener('mousemove', event => this.app.tooltip.mouseMoveToolip(event));
     this.$.templateRepeat.addEventListener('dom-change', () => {

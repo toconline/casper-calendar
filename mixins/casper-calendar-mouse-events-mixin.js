@@ -1,6 +1,6 @@
 import moment from 'moment/src/moment.js';
 
-export const CasperCalendarMouseEvents = superClass => {
+export const CasperCalendarMouseEventsMixin = superClass => {
   return class extends superClass {
 
     /**

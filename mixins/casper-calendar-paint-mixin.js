@@ -1,4 +1,4 @@
-export const CasperCalendarPaint = superClass => {
+export const CasperCalendarPaintMixin = superClass => {
   return class extends superClass {
 
     /**
@@ -22,7 +22,6 @@ export const CasperCalendarPaint = superClass => {
     __paintDate (startDate, endDate, setActiveAttribute = true) {
       // If the interval starts on the following years or ends in the previous years.
       if (startDate.year() > this.year || endDate.year() < this.year) return;
-
 
       this.__executeForEachDayBetweenDates(currentDate => {
         const currentDateCell = this.__findCellByMonthAndDay(currentDate.month(), currentDate.date());

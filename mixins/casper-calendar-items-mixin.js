@@ -1,7 +1,7 @@
 import moment from 'moment/src/moment.js';
 import { templatize } from '@polymer/polymer/lib/utils/templatize.js';
 
-export const CasperCalendarItems = superClass => {
+export const CasperCalendarItemsMixin = superClass => {
   return class extends superClass {
     /**
      * This method either collapses / expands the current month.
@@ -80,9 +80,9 @@ export const CasperCalendarItems = superClass => {
           else if (currentItem.backgroundColor) backgroundColor = currentItem.backgroundColor;
 
           let currentIntervalStyles = `
-          background-color: ${backgroundColor};
-          grid-column: span ${currentInterval.end - currentInterval.start + 1};
-        `;
+            background-color: ${backgroundColor};
+            grid-column: span ${currentInterval.end - currentInterval.start + 1};
+          `;
 
           if (currentInterval.halfDay) {
             currentIntervalStyles = currentInterval.onlyMorning
@@ -122,53 +122,60 @@ export const CasperCalendarItems = superClass => {
       this.shadowRoot.querySelectorAll('.item-row-container, .month-items-toggle').forEach(element => element.remove());
       this.shadowRoot.querySelectorAll('.cell.cell--has-item').forEach(element => element.classList.remove('cell--has-item'));
 
-      if (!this.items || this.items.constructor !== Array) {
-        return console.warn('The items property should be an array, empty or not.');
-      }
+      // Check if the items property contains an Array.
+      if (!this.items || this.items.constructor !== Array) return console.warn('The items property should be an array, empty or not.');
 
-      this.__itemsPerMonth = {};
-      for (let month = 0; month < 12; month++) {
-        this.__itemsPerMonth[month] = [];
-      }
+      this.__itemsPerMonth = Object.fromEntries(Array.from(Array(12).keys()).map(month => [month, []]));
 
       this.items.forEach((item, itemIndex) => {
-        item.intervals.forEach((interval, intervalIndex, intervals) => {
+        item.intervals.forEach((interval, intervalIndex) => {
           // Internal idenfiers for each item and interval.
-          const itemIdentifier = itemIndex;
-          const itemIntervalIdentifier = `${itemIndex}-${intervalIndex}`;
+          const itemId = itemIndex;
+          const intervalId = `${itemIndex}-${intervalIndex}`;
 
           // If the interval doesn't contain the end property assume it is a one day interval.
-          intervals[intervalIndex].end = interval.end || interval.start;
+          interval.end = interval.end || interval.start;
+
+          // If the interval does not contain the current year, there's no point in looping through its days.
+          if ((interval.start.year() < this.year && interval.end.year() < this.year)
+            || (interval.start.year() > this.year && interval.end.year() > this.year)) return;
 
           for (let currentDate = moment(interval.start); currentDate.diff(interval.end, 'days') <= 0; currentDate.add(1, 'days')) {
+            if (currentDate.year() < this.year) continue;
+            if (currentDate.year() > this.year) break;
+
             this.__findCellByMonthAndDay(currentDate.month(), currentDate.date()).classList.add('cell--has-item');
 
             // Check if the item was already created in the current month.
-            const existingItemIndex = this.__itemsPerMonth[currentDate.month()].findIndex(monthItem => monthItem[this.idInternalProperty] === itemIdentifier);
+            let existingItem = this.__itemsPerMonth[currentDate.month()].find(item => item[this.idInternalProperty] === itemId);
 
-            // When the item does not exist, create it with the current interval.
-            if (existingItemIndex === -1) {
-              this.__itemsPerMonth[currentDate.month()].push({
-                ...item,
-                [this.idInternalProperty]: itemIdentifier,
-                intervals: [{
-                  [this.idInternalProperty]: itemIntervalIdentifier,
-                  start: currentDate.date(),
-                  end: currentDate.date(),
-                  tooltip: interval.tooltip
-                }]
-              });
+            // When the item does not exists, create it.
+            if (!existingItem) {
+              existingItem = {
+                [this.idInternalProperty]: itemId,
+                intervals: [],
+                title: item.title,
+                backgroundColor: item.backgroundColor,
+              };
+
+              this.__itemsPerMonth[currentDate.month()].push(existingItem);
+            }
+
+            // Check if the item already contains the current interval.
+            const existingInterval = existingItem.intervals.find(interval => interval[this.idInternalProperty] === intervalId);
+
+            if (existingInterval) {
+              // Change the existing interval's end date.
+              existingInterval.end = currentDate.date();
             } else {
-              // Check if the item already contains the current interval.
-              const existingIntervalIndex = this.__itemsPerMonth[currentDate.month()][existingItemIndex].intervals.findIndex(monthItemInterval => monthItemInterval[this.idInternalProperty] === itemIntervalIdentifier);
-              existingIntervalIndex !== -1
-                ? this.__itemsPerMonth[currentDate.month()][existingItemIndex].intervals[existingIntervalIndex].end = currentDate.date()
-                : this.__itemsPerMonth[currentDate.month()][existingItemIndex].intervals.push({
-                  [this.idInternalProperty]: itemIntervalIdentifier,
-                  start: currentDate.date(),
-                  end: currentDate.date(),
-                  tooltip: interval.tooltip
-                });
+              // Create the new interval.
+              existingItem.intervals.push({
+                [this.idInternalProperty]: intervalId,
+                start: currentDate.date(),
+                end: currentDate.date(),
+                tooltip: interval.tooltip,
+                backgroundColor: interval.backgroundColor
+              });
             }
           }
         });
@@ -177,6 +184,9 @@ export const CasperCalendarItems = superClass => {
       this.__createMonthExpansionCollapseIcons();
     }
 
+    /**
+     * This method creates all the toggle icons to expand / collapse the months which have at least one item.
+     */
     __createMonthExpansionCollapseIcons () {
       Object.entries(this.__itemsPerMonth).forEach(([month, items]) => {
         if (items.length === 0) return;
