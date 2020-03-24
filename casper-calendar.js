@@ -573,8 +573,13 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
    */
   __executeForEachDayBetweenDates (callback, startDate, endDate, skipDifferentYears = false) {
     // Sort both dates because the user can select the dates backwards.
-    const [sortedStartDate, sortedEndDate] = [startDate, endDate].sort((previousDate, nextDate) => previousDate.diff(nextDate));
+    const [sortedStartDate, sortedEndDate] = [startDate, endDate].sort((a, b) => a.diff(b));
     const daysBetweenBothDates = sortedEndDate.diff(sortedStartDate, 'days');
+
+    // If the interval does not contain the current year, there's no point in looping through its days.
+    if (skipDifferentYears && (
+      (sortedStartDate.year() < this.year && sortedEndDate.year() < this.year) ||
+      (sortedStartDate.year() > this.year && sortedEndDate.year() > this.year))) return;
 
     for (let dayCount = 0; dayCount <= daysBetweenBothDates; dayCount++) {
       const currentDate = moment(sortedStartDate).add(dayCount, 'days');

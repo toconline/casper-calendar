@@ -136,14 +136,7 @@ export const CasperCalendarItemsMixin = superClass => {
           // If the interval doesn't contain the end property assume it is a one day interval.
           interval.end = interval.end || interval.start;
 
-          // If the interval does not contain the current year, there's no point in looping through its days.
-          if ((interval.start.year() < this.year && interval.end.year() < this.year)
-            || (interval.start.year() > this.year && interval.end.year() > this.year)) return;
-
-          for (let currentDate = moment(interval.start); currentDate.diff(interval.end, 'days') <= 0; currentDate.add(1, 'days')) {
-            if (currentDate.year() < this.year) continue;
-            if (currentDate.year() > this.year) break;
-
+          this.__executeForEachDayBetweenDates(currentDate => {
             this.__findCellByMonthAndDay(currentDate.month(), currentDate.date()).classList.add('cell--has-item');
 
             // Check if the item was already created in the current month.
@@ -177,7 +170,7 @@ export const CasperCalendarItemsMixin = superClass => {
                 backgroundColor: interval.backgroundColor
               });
             }
-          }
+          }, moment(interval.start), moment(interval.end), true);
         });
       });
 
