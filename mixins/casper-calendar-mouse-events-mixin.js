@@ -84,9 +84,8 @@ export const CasperCalendarMouseEventsMixin = superClass => {
           this.__removeActiveDate(activeDateIndex);
         } else {
           // The user clicked on a day that wasn't previously active so we'll try to add it to the list.
-          if (this.__addActiveDate(newActiveDate)) {
-            eventTarget.setAttribute('active', '');
-          }
+          this.__addActiveDate(newActiveDate);
+          eventTarget.setAttribute('active', '');
         }
       }
 
@@ -104,13 +103,11 @@ export const CasperCalendarMouseEventsMixin = superClass => {
 
       if (this.maximumNumberActiveDates === undefined || mergedActiveDates.length <= this.maximumNumberActiveDates) {
         this.activeDates = mergedActiveDates;
-        return true;
+      } else {
+        // Remove the first active date to add the new one.
+        this.__removeActiveDate(0);
+        this.activeDates = [...this.activeDates, newActiveDate];
       }
-
-      // This means the new interval can't be added since it surpasses the limit of simultaneous intervals.
-      this.__paintDate(newActiveDate.start, newActiveDate.end, false);
-
-      this.app.openToast({ backgroundColor: 'red', text: `Só pode ter seleccionado ${this.maximumNumberActiveDates} intervalo(s) simultaneamente.` });
     }
 
     /**

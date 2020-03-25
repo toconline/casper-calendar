@@ -500,6 +500,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
         day: currentDate.date(),
         month: currentDate.month(),
         isWeekend: [0, 6].includes(currentDate.day()),
+        isHoliday: this.__holidays.some(holiday => currentDate.month() === (holiday.month - 1) && currentDate.date() === holiday.day)
       });
     }, startDate, endDate);
 
