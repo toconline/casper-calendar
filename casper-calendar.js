@@ -338,7 +338,6 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
 
   ready () {
     super.ready();
-    window.calendar = this;
 
     this.addEventListener('mousemove', event => this.app.tooltip.mouseMoveToolip(event));
     this.$.templateRepeat.addEventListener('dom-change', () => {

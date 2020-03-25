@@ -106,7 +106,10 @@ export const CasperCalendarMouseEventsMixin = superClass => {
       } else {
         // Remove the first active date to add the new one.
         this.__removeActiveDate(0);
-        this.activeDates = [...this.activeDates, newActiveDate];
+        this.activeDates = [...this.activeDates, {
+          ...newActiveDate,
+          days: this.__getDaysBetweenDates(newActiveDate.start, newActiveDate.end)
+        }];
       }
     }
 
