@@ -100,7 +100,10 @@ export const CasperCalendarItemsMixin = superClass => {
         const templateInstance = new ItemRowTemplateClass({
           title: currentItem.title,
           intervals: currentItemIntervals,
-          itemRowContainerStyle: `grid-template-columns: 10% repeat(${this.__numberOfColumns}, 1fr);`
+          itemRowContainerStyle: `
+            grid-template-columns: 10% repeat(${this.__numberOfColumns}, 1fr);
+            ${currentItem.rowBackgroundColor ? `background-color: ${currentItem.rowBackgroundColor}` : ''}
+          `
         });
 
         documentFragment.appendChild(templateInstance.root);
@@ -149,6 +152,7 @@ export const CasperCalendarItemsMixin = superClass => {
                 intervals: [],
                 title: item.title,
                 backgroundColor: item.backgroundColor,
+                rowBackgroundColor: item.rowBackgroundColor
               };
 
               this.__itemsPerMonth[currentDate.month()].push(existingItem);
