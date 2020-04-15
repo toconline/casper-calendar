@@ -10,7 +10,6 @@ export const CasperCalendarMouseEventsMixin = superClass => {
      */
     __cellOnMouseDown (event) {
       const eventTarget = event.composedPath().find(element => element.classList.contains('cell'));
-      console.log(!Object.keys(eventTarget.dataset).includes('day'));
 
       // This means it's an empty day used as padding or the user has entered the limbo state where he was selecting a date but then left the component.
       if (!Object.keys(eventTarget.dataset).includes('day') || this.__isUserSelectingRange) return;
@@ -37,7 +36,7 @@ export const CasperCalendarMouseEventsMixin = superClass => {
       if (!Object.keys(eventTarget.dataset).includes('day') || !this.__isUserHoldingMouseButton) return;
 
       // Only remove cells from the currently active range.
-      if (this.__activeDateEnd) this.__paintDate(this.__activeDateStart, this.__activeDateEnd, false);
+      if (this.__activeDateEnd) this.__paintDate({ start: this.__activeDateStart, end: this.__activeDateEnd }, false);
 
       this.__isUserSelectingRange = true;
       this.__activeDateEnd = moment(new Date(
@@ -46,7 +45,7 @@ export const CasperCalendarMouseEventsMixin = superClass => {
         eventTarget.dataset.day
       ));
 
-      this.__paintDate(this.__activeDateStart, this.__activeDateEnd);
+      this.__paintDate({ start: this.__activeDateStart, end: this.__activeDateEnd });
     }
 
     /**
@@ -74,57 +73,23 @@ export const CasperCalendarMouseEventsMixin = superClass => {
       if (this.__isUserSelectingRange) {
         // This means the user stopped selecting a range.
         this.__isUserSelectingRange = false;
-        this.__addActiveDate(newActiveDate);
+        this.addActiveDate(newActiveDate);
       } else {
         // This means it was a click, so both the start and end date are equal.
         const activeDateIndex = this.__activeDateIndexOfDay(newActiveDate.start);
 
         if (activeDateIndex !== -1) {
           // The user clicked on an active date so we'll remove it from the list.
-          this.__removeActiveDate(activeDateIndex);
+          this.removeActiveDate(activeDateIndex);
         } else {
           // The user clicked on a day that wasn't previously active so we'll try to add it to the list.
-          this.__addActiveDate(newActiveDate);
+          this.addActiveDate(newActiveDate);
           eventTarget.setAttribute('active', '');
         }
       }
 
       this.__activeDateEnd = undefined;
       this.__activeDateStart = undefined;
-    }
-
-    /**
-     * This method tries to add a new date taking into account the maximum number of simultaneous dates property.
-     *
-     * @param {Object} newActiveDate The new date we'll try to add.
-     */
-    __addActiveDate (newActiveDate) {
-      const mergedActiveDates = this.__mergeActiveDates(newActiveDate);
-
-      if (this.maximumNumberActiveDates && mergedActiveDates.length > this.maximumNumberActiveDates) {
-        // Remove the first active date to add the new one.
-        this.__removeActiveDate(0);
-        mergedActiveDates.shift();
-      }
-
-      this.activeDates = mergedActiveDates;
-    }
-
-    /**
-     * This method removes an active date by its index.
-     *
-     * @param {Number} activeDateIndex The index of the date we'll remove.
-     */
-    __removeActiveDate (activeDateIndex) {
-      const deletedActiveDate = this.activeDates[activeDateIndex];
-
-      // Remove the active date from the public property.
-      this.activeDates = [
-        ...this.activeDates.slice(0, activeDateIndex),
-        ...this.activeDates.slice(activeDateIndex + 1, this.activeDates.length)
-      ];
-
-      this.__paintDate(deletedActiveDate.start, deletedActiveDate.end, false);
     }
   }
 };

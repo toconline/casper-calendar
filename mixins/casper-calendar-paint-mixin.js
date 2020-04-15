@@ -5,10 +5,10 @@ export const CasperCalendarPaintMixin = superClass => {
      * This method paints the current active dates.
      */
     __paintActiveDates () {
-      this.shadowRoot.querySelectorAll('.cell[active]').forEach(cell => cell.removeAttribute('active'));
+      this.shadowRoot.querySelectorAll('.cell[style]').forEach(cell => cell.style.backgroundColor = '');
 
       if (this.activeDates.length > 0) {
-        this.activeDates.forEach(activeDate => this.__paintDate(activeDate.start, activeDate.end));
+        this.activeDates.forEach(activeDate => this.__paintDate(activeDate));
       }
     }
 
@@ -17,23 +17,26 @@ export const CasperCalendarPaintMixin = superClass => {
      *
      * @param {Date} startDate The date's start.
      * @param {Date} end The date's end.
-     * @param {Boolean} setActiveAttribute This attribute decides if the cells are going to be painted or hidden.
+     * @param {Boolean} paintActiveDate This parameter decides if the cells are going to be painted or the opposite.
      */
-    __paintDate (startDate, endDate, setActiveAttribute = true) {
+    __paintDate (date, paintActiveDate = true) {
       // If the interval starts on the following years or ends in the previous years.
-      if (startDate.year() > this.year || endDate.year() < this.year) return;
+      if (date.start.year() > this.year || date.end.year() < this.year) return;
 
       this.__executeForEachDayBetweenDates(currentDate => {
         const currentDateCell = this.__findCellByMonthAndDay(currentDate.month(), currentDate.date());
         if (!currentDateCell) return;
 
-        if (setActiveAttribute) {
-          currentDateCell.setAttribute('active', '');
+        if (paintActiveDate) {
+          currentDateCell.style.backgroundColor = date.meta && date.meta.type
+            ? this.$.selector.getBackgroundColorForType(date.meta.type)
+            : this.__intervalBackgroundColor;
+
         } else if (this.__activeDateIndexOfDay(currentDate) === -1) {
           // Only remove the active attribute from the cell, if there are no active dates that contain this day.
-          currentDateCell.removeAttribute('active');
+          currentDateCell.style.backgroundColor = '';
         }
-      }, startDate, endDate, true);
+      }, date.start, date.end, true);
     }
 
     /**

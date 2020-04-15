@@ -1,13 +1,19 @@
+import './components/casper-calendar-selector.js';
+import { CASPER_CALENDAR_MODES } from './casper-calendar-constants.js';
 import { CasperCalendarItemsMixin } from './mixins/casper-calendar-items-mixin.js';
 import { CasperCalendarPaintMixin } from './mixins/casper-calendar-paint-mixin.js';
 import { CasperCalendarMouseEventsMixin } from './mixins/casper-calendar-mouse-events-mixin.js';
+import { CasperCalendarActiveDatesMixin } from './mixins/casper-calendar-active-dates-mixin.js';
 
 import moment from 'moment/src/moment.js';
 import '@casper2020/casper-icons/casper-icon.js';
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
 import { afterNextRender } from '@polymer/polymer/lib/utils/render-status.js';
 
-class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(CasperCalendarMouseEventsMixin(PolymerElement))) {
+class CasperCalendar extends CasperCalendarItemsMixin(
+  CasperCalendarPaintMixin(
+    CasperCalendarMouseEventsMixin(
+      CasperCalendarActiveDatesMixin(PolymerElement)))) {
 
   static get is () {
     return 'casper-calendar';
@@ -97,6 +103,15 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
         value: '__identifier'
       },
       /**
+       * The mode in which the calendar currently is which by default is days.
+       *
+       * @type {String}
+       */
+      mode: {
+        type: String,
+        value: CASPER_CALENDAR_MODES.DAYS
+      },
+      /**
        * This array contains the list of holidays.
        */
       __holidays: {
@@ -152,10 +167,12 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
           border: 1px #F2F2F2 solid;
         }
 
+        /*
         #main-container .row-container .cell:not(.cell--left-header):not(.cell--top-header)[active] {
           color: var(--on-primary-color);
           background-color: var(--primary-color);
         }
+        */
 
         #main-container .row-container .cell:not(.cell--left-header):not(.cell--top-header):hover {
           cursor: pointer;
@@ -286,6 +303,15 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
           height: 30px;
         }
       </style>
+
+      <casper-calendar-selector
+        id="selector"
+        mode="[[mode]]"
+        type="{{__intervalType}}"
+        custom-value="{{__intervalCustomValue}}"
+        background-color="{{__intervalBackgroundColor}}">
+      </casper-calendar-selector>
+
       <div id="main-container">
         <div class="row-container">
           <!--Year selector-->
@@ -338,7 +364,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
 
   ready () {
     super.ready();
-
+    window.calendar = this;
     this.addEventListener('mousemove', event => this.app.tooltip.mouseMoveToolip(event));
     this.$.templateRepeat.addEventListener('dom-change', () => {
       afterNextRender(this, () => {
@@ -369,18 +395,18 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
    */
   setActiveDates (activeDates) {
     this.activeDates = activeDates.map(activeDate => {
-      // Guarantee that all the objects are instances of the moment.
       const activeDateEnd = moment.isMoment(activeDate.end) ? activeDate.end : moment(activeDate.end);
       const activeDateStart = moment.isMoment(activeDate.start) ? activeDate.start : moment(activeDate.start);
 
       return {
+        ...activeDate,
         start: activeDateStart,
-        end: activeDateEnd,
+        end:  activeDateEnd,
         days: this.__getDaysBetweenDates(activeDateStart, activeDateEnd)
       };
     });
 
-    afterNextRender(this, () => { this.__paintActiveDates(); });
+    this.__paintActiveDates();
   }
 
   /**
@@ -529,41 +555,6 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
   }
 
   /**
-   * This method adds a new active date to the list of existing ones and tries to merge the adjacent ones.
-   *
-   * @param {Object} newActiveDate The date that we'll be adding.
-   */
-  __mergeActiveDates (newActiveDate) {
-    const updatedActiveDates = [];
-
-    this.activeDates.forEach(activeDate => {
-      const activeDateEnd = moment(activeDate.end).add(1, 'days');
-      const activeDateStart = moment(activeDate.start).subtract(1, 'days');
-
-      if (
-        (newActiveDate.start.isSameOrBefore(activeDateStart) && newActiveDate.end.isSameOrAfter(activeDateEnd)) ||
-        (newActiveDate.start.isSameOrAfter(activeDateStart) && newActiveDate.end.isSameOrBefore(activeDateEnd)) ||
-        (newActiveDate.start.isSameOrAfter(activeDateStart) && newActiveDate.start.isSameOrBefore(activeDateEnd) && newActiveDate.end.isSameOrAfter(activeDateEnd)) ||
-        (newActiveDate.start.isSameOrBefore(activeDateStart) && newActiveDate.end.isSameOrAfter(activeDateStart) && newActiveDate.end.isSameOrBefore(activeDateEnd))
-      ) {
-        // This means the two dates overlap so we merge them together.
-        newActiveDate = {
-          start: moment.min([newActiveDate.start, activeDate.start]),
-          end: moment.max([newActiveDate.end, activeDate.end]),
-        };
-      } else {
-        // In this case, since there was no overlap, push the unadulterated date.
-        updatedActiveDates.push(activeDate);
-      }
-    });
-
-    return [...updatedActiveDates, newActiveDate].map(activeDate => ({
-      ...activeDate,
-      days: this.__getDaysBetweenDates(activeDate.start, activeDate.end)
-    }));
-  }
-
-  /**
    * This method will execute a callback for each day between two dates.
    *
    * @param {Function} callback The callback that will be executed for each day between both dates.
@@ -592,16 +583,6 @@ class CasperCalendar extends CasperCalendarItemsMixin(CasperCalendarPaintMixin(C
 
       callback(currentDate);
     }
-  }
-
-  /**
-   * This method will look into the existing active dates and return the index of the one that contains the specified day.
-   *
-   * @param {Object} day The day we're trying to find.
-   */
-  __activeDateIndexOfDay (day) {
-    // The fourth parameter indicates that the comparison is inclusive.
-    return this.activeDates.findIndex(activeDate => day.isBetween(activeDate.start, activeDate.end, null, '[]'));
   }
 
   /**
