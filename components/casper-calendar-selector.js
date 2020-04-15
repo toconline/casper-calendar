@@ -25,7 +25,7 @@ class CasperCalendarSelector extends PolymerElement {
 
         <paper-radio-button data-type="HOURS" name="FULL_HOURS">Dia Completo - [[__fullHoursValue]]</paper-radio-button>
         <paper-radio-button data-type="HOURS" name="HALF_HOURS">Meio-dia - [[__halfHoursValue]]</paper-radio-button>
-        <paper-radio-button data-type="HOURS" name="CUSTOM_HOURS">Apenas tarde</paper-radio-button>
+        <paper-radio-button data-type="HOURS" name="CUSTOM_HOURS">Outro</paper-radio-button>
       </paper-radio-group>
 
       <paper-input disabled value="{{__customHoursValue}}" type="number" min="0" max="24"></paper-input>
