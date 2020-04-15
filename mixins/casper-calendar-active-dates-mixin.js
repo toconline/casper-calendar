@@ -53,7 +53,6 @@ export const CasperCalendarActiveDatesMixin = superClass => {
      * @param {Object} newActiveDate The date that we'll be adding.
      */
     __mergeActiveDates (newActiveDate) {
-      let isRepaintNecessary = false;
       const updatedActiveDates = [];
 
       this.activeDates.forEach(activeDate => {
@@ -77,8 +76,8 @@ export const CasperCalendarActiveDatesMixin = superClass => {
         }
       });
 
-      // Add the meta information about the newly added active date.
-      newActiveDate.meta = { type: this.__intervalType,customValue: this.__intervalCustomValue };
+      // Add the meta information.
+      newActiveDate.meta = this.__intervalMeta;
 
       return [...updatedActiveDates, newActiveDate].map(activeDate => ({
         ...activeDate,

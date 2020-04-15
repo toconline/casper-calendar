@@ -307,8 +307,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
       <casper-calendar-selector
         id="selector"
         mode="[[mode]]"
-        type="{{__intervalType}}"
-        custom-value="{{__intervalCustomValue}}"
+        meta="{{__intervalMeta}}"
         background-color="{{__intervalBackgroundColor}}">
       </casper-calendar-selector>
 
@@ -400,8 +399,8 @@ class CasperCalendar extends CasperCalendarItemsMixin(
 
       return {
         ...activeDate,
+        end: activeDateEnd,
         start: activeDateStart,
-        end:  activeDateEnd,
         days: this.__getDaysBetweenDates(activeDateStart, activeDateEnd)
       };
     });
