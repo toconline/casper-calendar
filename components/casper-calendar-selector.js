@@ -19,14 +19,16 @@ class CasperCalendarSelector extends PolymerElement {
       </style>
 
       <paper-radio-group>
-        <template is="dom-repeat" items="[[__selectorOptions]]">
-          <paper-radio-button data-type$="[[item.mode]]" name="[[item.value]]">
-            [[item.label]]
-          </paper-radio-button>
-        </template>
+        <paper-radio-button data-type="DAYS" name="FULL_DAY">Dia Completo</paper-radio-button>
+        <paper-radio-button data-type="DAYS" name="ONLY_MORNING">Apenas manhã</paper-radio-button>
+        <paper-radio-button data-type="DAYS" name="ONLY_AFTERNOON">Apenas tarde</paper-radio-button>
+
+        <paper-radio-button data-type="HOURS" name="FULL_HOURS">Dia Completo - [[__fullHoursValue]]</paper-radio-button>
+        <paper-radio-button data-type="HOURS" name="HALF_HOURS">Meio-dia - [[__halfHoursValue]]</paper-radio-button>
+        <paper-radio-button data-type="HOURS" name="CUSTOM_HOURS">Apenas tarde</paper-radio-button>
       </paper-radio-group>
 
-      <paper-input disabled value="{{__customValue}}" type="number"></paper-input>
+      <paper-input disabled value="{{__customHoursValue}}" type="number" min="0" max="24"></paper-input>
     `;
   }
 
@@ -59,53 +61,76 @@ class CasperCalendarSelector extends PolymerElement {
         type: String,
         notify: true
       },
+      fullHoursValue: {
+        type: Number,
+        observer: '__fullHoursValueChanged'
+      },
       /**
        * The currently custom value that the user introduced.
        *
        * @type {Number}
        */
-      __customValue: {
+      __customHoursValue: {
         type: Number,
-        observer: '__customValueChanged'
+        observer: '__customHoursValueChanged'
       },
       /**
        * The list of options for the hours / days modes.
        *
        * @type {Array}
        */
-      __selectorOptions: {
+      __backgroundColors: {
         type: Array,
-        value: [
-          { value: CASPER_CALENDAR_MODE_TYPES.FULL_DAY, mode: CASPER_CALENDAR_MODES.DAYS, label: 'Dia Inteiro', backgroundColor: 'red' },
-          { value: CASPER_CALENDAR_MODE_TYPES.ONLY_MORNING, mode: CASPER_CALENDAR_MODES.DAYS, label: 'Só manhã', backgroundColor: 'blue' },
-          { value: CASPER_CALENDAR_MODE_TYPES.ONLY_AFTERNOON, mode: CASPER_CALENDAR_MODES.DAYS, label: 'Só tarde', backgroundColor: 'green' },
-          { value: CASPER_CALENDAR_MODE_TYPES.FULL_HOURS, mode: CASPER_CALENDAR_MODES.HOURS, label: '8h', backgroundColor: 'red' },
-          { value: CASPER_CALENDAR_MODE_TYPES.HALF_HOURS, mode: CASPER_CALENDAR_MODES.HOURS, label: '4h', backgroundColor: 'grey' },
-          { value: CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS, mode: CASPER_CALENDAR_MODES.HOURS, label: 'Outro', backgroundColor: 'black' }
-        ]
-      },
-    };
+        value: {
+          FULL_DAY: 'red',
+          ONLY_MORNING: 'blue',
+          ONLY_AFTERNOON: 'green',
+          FULL_HOURS: 'red',
+          HALF_HOURS: 'gray',
+          CUSTOM_HOURS: 'aliceblue'
+        }
+      }
+    }
+  };
+
+  /**
+   * Returns the background color for a specific type.
+   *
+   * @param {String} type The type we're trying to obtain the background color for.
+   */
+  getBackgroundColorForType (type) {
+    return this.__backgroundColors[type];
   }
 
   __isCalendarInDaysMode () { return this.mode === CASPER_CALENDAR_MODES.DAYS; }
   __isCalendarInHoursMode () { return this.mode === CASPER_CALENDAR_MODES.HOURS; }
 
+  /**
+   * Observer that gets fired when the calendar mode changes.
+   */
   __modeChanged () {
     afterNextRender(this, () => {
       this.__paperInput = this.__paperInput || this.shadowRoot.querySelector('paper-input');
       this.__radioGroup = this.__radioGroup || this.shadowRoot.querySelector('paper-radio-group');
 
       this.__radioGroup.addEventListener('selected-changed', event => {
+        const selectedValue = event.detail.value;
+
         // Disable the custom value input unless that option is currently selected.
-        this.__paperInput.disabled = event.detail.value !== CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS;
+        this.__paperInput.disabled = selectedValue !== CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS;
 
-        const selectedOption = this.__selectorOptions.find(option => option.value === event.detail.value);
+        this.backgroundColor = this.__backgroundColors[selectedValue];
 
-        this.backgroundColor = selectedOption.backgroundColor;
-        this.meta = {
-          type: selectedOption.value,
-          customValue: this.__paperInput.disabled ? undefined : this.__customValue
-        };
+        let value = undefined;
+        if (this.__isCalendarInHoursMode()) {
+          switch (selectedValue) {
+            case CASPER_CALENDAR_MODE_TYPES.FULL_HOURS: value = this.fullHoursValue; break;
+            case CASPER_CALENDAR_MODE_TYPES.HALF_HOURS: value = this.fullHoursValue / 2; break;
+            case CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS: value = parseFloat(this.__customHoursValue); break;
+          }
+        }
+
+        this.meta = { type: selectedValue, value };
       });
 
       // Display the correct options given the new mode.
@@ -115,27 +140,32 @@ class CasperCalendarSelector extends PolymerElement {
 
       // Pre-select the first option of the days or hours mode.
       this.__isCalendarInDaysMode()
-        ? this.__radioGroup.selected = this.__selectorOptions.find(option => option.mode === CASPER_CALENDAR_MODES.DAYS).value
-        : this.__radioGroup.selected = this.__selectorOptions.find(option => option.mode === CASPER_CALENDAR_MODES.HOURS).value;
+        ? this.__radioGroup.selected = CASPER_CALENDAR_MODE_TYPES.FULL_DAY
+        : this.__radioGroup.selected = CASPER_CALENDAR_MODE_TYPES.FULL_HOURS
     });
   }
 
-  /**
-   * Returns the background color for a specific type.
-   *
-   * @param {String} type The type we're trying to obtain the background color for.
-   */
-  getBackgroundColorForType (type) {
-    return this.__selectorOptions.find(option => option.value === type).backgroundColor;
+  __fullHoursValueChanged (fullHours) {
+    this.__fullHoursValue = this.__humanizeNumberOfHours(fullHours);
+    this.__halfHoursValue = this.__humanizeNumberOfHours(fullHours / 2);
+  }
+
+  __humanizeNumberOfHours (numberOfHours) {
+    const hours = Math.floor(numberOfHours);
+    const minutes = Math.round((numberOfHours - hours) * 60);
+
+    return minutes === 0
+      ? `${hours}h`
+      : `${hours}h ${minutes}m`;
   }
 
   /**
-   * Updates the meta property considering the new custom value.
+   * Updates the meta property considering the new custom hours value.
    *
-   * @param {String} customValue The current custom value.
+   * @param {String} customHoursValue The current custom hours value.
    */
-  __customValueChanged (customValue) {
-    this.meta = { ...this.meta, customValue };
+  __customHoursValueChanged (customHoursValue) {
+    this.meta = { ...this.meta, value: parseFloat(customHoursValue) };
   }
 }
 

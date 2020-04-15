@@ -111,6 +111,9 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         type: String,
         value: CASPER_CALENDAR_MODES.DAYS
       },
+      fullHoursValue: {
+        type: Number,
+      },
       /**
        * This array contains the list of holidays.
        */
@@ -308,6 +311,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         id="selector"
         mode="[[mode]]"
         meta="{{__intervalMeta}}"
+        full-hours-value="[[fullHoursValue]]"
         background-color="{{__intervalBackgroundColor}}">
       </casper-calendar-selector>
 
