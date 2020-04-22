@@ -72,7 +72,7 @@ class CasperCalendarSelector extends PolymerElement {
           max="24"
           type="number"
           no-label-float
-          value="{{__customHoursValue}}"
+          value="{{customHours}}"
           label="Introduza um número de horas">
         </paper-input>
       </div>
@@ -113,9 +113,9 @@ class CasperCalendarSelector extends PolymerElement {
        *
        * @type {Number}
        */
-      __customHoursValue: {
+      customHours: {
         type: Number,
-        observer: '__customHoursValueChanged'
+        notify: true
       },
       /**
        * The list of options for the hours / days modes.
@@ -166,11 +166,8 @@ class CasperCalendarSelector extends PolymerElement {
           : this.__paperInput.removeAttribute('visible');
         this.__paperInput.disabled = !isCustomHoursSelected;
 
+        this.meta = { type: selectedValue };
         this.backgroundColor = this.__backgroundColors[selectedValue];
-
-        this.meta = this.__isCalendarInDaysMode() || !isCustomHoursSelected
-          ? { type: selectedValue }
-          : { type: selectedValue, customValue: parseFloat(this.__customHoursValue) };
       });
 
       // Display the correct options given the new mode.
@@ -199,15 +196,6 @@ class CasperCalendarSelector extends PolymerElement {
     return minutes === 0
       ? `${hours}h`
       : `${hours}h ${minutes}m`;
-  }
-
-  /**
-   * Updates the meta property considering the new custom hours value.
-   *
-   * @param {String} customHoursValue The current custom hours value.
-   */
-  __customHoursValueChanged (customHoursValue) {
-    this.meta = { ...this.meta, customValue: parseFloat(customHoursValue) };
   }
 }
 

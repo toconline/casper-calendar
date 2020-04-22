@@ -112,6 +112,15 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         value: CASPER_CALENDAR_MODES.DAYS
       },
       /**
+       * The hours value that will be used when the user decides to input a custom number of hours.
+       *
+       * @type {Number}
+       */
+      customHours: {
+        type: Number,
+        notify: true
+      },
+      /**
        * This array contains the list of holidays.
        */
       __holidays: {
@@ -307,6 +316,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         id="selector"
         mode="[[mode]]"
         meta="{{__intervalMeta}}"
+        custom-hours="{{customHours}}"
         background-color="{{__intervalBackgroundColor}}">
       </casper-calendar-selector>
 
