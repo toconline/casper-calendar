@@ -130,7 +130,7 @@ class CasperCalendarSelector extends PolymerElement {
           ONLY_AFTERNOON: 'green',
           FULL_HOURS: 'red',
           HALF_HOURS: 'gray',
-          CUSTOM_HOURS: 'aliceblue'
+          CUSTOM_HOURS: 'purple'
         }
       }
     }
@@ -182,20 +182,6 @@ class CasperCalendarSelector extends PolymerElement {
         ? CASPER_CALENDAR_MODE_TYPES.FULL_DAY
         : CASPER_CALENDAR_MODE_TYPES.FULL_HOURS;
     });
-  }
-
-  __fullHoursValueChanged (fullHours) {
-    this.__fullHoursValue = this.__humanizeNumberOfHours(fullHours);
-    this.__halfHoursValue = this.__humanizeNumberOfHours(fullHours / 2);
-  }
-
-  __humanizeNumberOfHours (numberOfHours) {
-    const hours = Math.floor(numberOfHours);
-    const minutes = Math.round((numberOfHours - hours) * 60);
-
-    return minutes === 0
-      ? `${hours}h`
-      : `${hours}h ${minutes}m`;
   }
 }
 
