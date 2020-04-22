@@ -13,10 +13,9 @@ export const CasperCalendarPaintMixin = superClass => {
     }
 
     /**
-     * This function is used to paint the cells that are contained in a specific date.
+     * This function is used to paint the cells that are contained in a specific date range.
      *
-     * @param {Date} startDate The date's start.
-     * @param {Date} end The date's end.
+     * @param {Date} date The date we're going to paint.
      * @param {Boolean} paintActiveDate This parameter decides if the cells are going to be painted or the opposite.
      */
     __paintDate (date, paintActiveDate = true) {

@@ -13,22 +13,69 @@ class CasperCalendarSelector extends PolymerElement {
   static get template () {
     return html`
       <style>
-        paper-radio-button {
+        #container {
+          display: flex;
+          padding: 10px;
+          align-items: center;
+        }
+
+        #container label {
+          margin-right: 8px;
+        }
+
+        #container paper-radio-group {
+          display: flex;
+        }
+
+        #container paper-radio-group paper-radio-button {
           display: none;
+        }
+
+        #container paper-radio-group paper-radio-button[visible] {
+          display: flex;
+        }
+
+        #container paper-radio-group paper-radio-button .color-square {
+          width: 15px;
+          height: 15px;
+          display: flex;
+        }
+
+        #container paper-input {
+          width: 20%;
+          display: none;
+          --paper-input-container: {
+            padding: 0;
+          }
+        }
+
+        #container paper-input[visible] {
+          display: block;
         }
       </style>
 
-      <paper-radio-group>
-        <paper-radio-button data-type="DAYS" name="FULL_DAY">Dia Completo</paper-radio-button>
-        <paper-radio-button data-type="DAYS" name="ONLY_MORNING">Apenas manhã</paper-radio-button>
-        <paper-radio-button data-type="DAYS" name="ONLY_AFTERNOON">Apenas tarde</paper-radio-button>
+      <div id="container">
+        <label>Escolha uma opção:</label>
+        <paper-radio-group>
+          <paper-radio-button data-type="DAYS" name="FULL_DAY">Dia Completo</paper-radio-button>
+          <paper-radio-button data-type="DAYS" name="ONLY_MORNING">Apenas manhã</paper-radio-button>
+          <paper-radio-button data-type="DAYS" name="ONLY_AFTERNOON">Apenas tarde</paper-radio-button>
 
-        <paper-radio-button data-type="HOURS" name="FULL_HOURS">Dia Completo - [[__fullHoursValue]]</paper-radio-button>
-        <paper-radio-button data-type="HOURS" name="HALF_HOURS">Meio-dia - [[__halfHoursValue]]</paper-radio-button>
-        <paper-radio-button data-type="HOURS" name="CUSTOM_HOURS">Outro</paper-radio-button>
-      </paper-radio-group>
+          <paper-radio-button data-type="HOURS" name="FULL_HOURS">Dia Completo</paper-radio-button>
+          <paper-radio-button data-type="HOURS" name="HALF_HOURS">Meio-dia</paper-radio-button>
+          <paper-radio-button data-type="HOURS" name="CUSTOM_HOURS">Outro:</paper-radio-button>
+        </paper-radio-group>
 
-      <paper-input disabled value="{{__customHoursValue}}" type="number" min="0" max="24"></paper-input>
+        <paper-input
+          disabled
+          min="0"
+          max="24"
+          type="number"
+          no-label-float
+          value="{{__customHoursValue}}"
+          label="Introduza um número de horas">
+        </paper-input>
+      </div>
     `;
   }
 
@@ -61,10 +108,6 @@ class CasperCalendarSelector extends PolymerElement {
         type: String,
         notify: true
       },
-      fullHoursValue: {
-        type: Number,
-        observer: '__fullHoursValueChanged'
-      },
       /**
        * The currently custom value that the user introduced.
        *
@@ -80,7 +123,7 @@ class CasperCalendarSelector extends PolymerElement {
        * @type {Array}
        */
       __backgroundColors: {
-        type: Array,
+        type: Object,
         value: {
           FULL_DAY: 'red',
           ONLY_MORNING: 'blue',
@@ -115,33 +158,32 @@ class CasperCalendarSelector extends PolymerElement {
 
       this.__radioGroup.addEventListener('selected-changed', event => {
         const selectedValue = event.detail.value;
+        const isCustomHoursSelected = selectedValue === CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS;
 
         // Disable the custom value input unless that option is currently selected.
-        this.__paperInput.disabled = selectedValue !== CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS;
+        this.__isCalendarInHoursMode()
+          ? this.__paperInput.setAttribute('visible', true)
+          : this.__paperInput.removeAttribute('visible');
+        this.__paperInput.disabled = !isCustomHoursSelected;
 
         this.backgroundColor = this.__backgroundColors[selectedValue];
 
-        let value = undefined;
-        if (this.__isCalendarInHoursMode()) {
-          switch (selectedValue) {
-            case CASPER_CALENDAR_MODE_TYPES.FULL_HOURS: value = this.fullHoursValue; break;
-            case CASPER_CALENDAR_MODE_TYPES.HALF_HOURS: value = this.fullHoursValue / 2; break;
-            case CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS: value = parseFloat(this.__customHoursValue); break;
-          }
-        }
-
-        this.meta = { type: selectedValue, value };
+        this.meta = this.__isCalendarInDaysMode() || !isCustomHoursSelected
+          ? { type: selectedValue }
+          : { type: selectedValue, customValue: parseFloat(this.__customHoursValue) };
       });
 
       // Display the correct options given the new mode.
       this.shadowRoot.querySelectorAll('paper-radio-button').forEach(radioButton => {
-        radioButton.style.display = radioButton.dataset.type === this.mode ? 'block' : 'none';
+        radioButton.dataset.type === this.mode
+          ? radioButton.setAttribute('visible', true)
+          : radioButton.removeAttribute('visible');
       });
 
       // Pre-select the first option of the days or hours mode.
-      this.__isCalendarInDaysMode()
-        ? this.__radioGroup.selected = CASPER_CALENDAR_MODE_TYPES.FULL_DAY
-        : this.__radioGroup.selected = CASPER_CALENDAR_MODE_TYPES.FULL_HOURS
+      this.__radioGroup.selected = this.__isCalendarInDaysMode()
+        ? CASPER_CALENDAR_MODE_TYPES.FULL_DAY
+        : CASPER_CALENDAR_MODE_TYPES.FULL_HOURS;
     });
   }
 
@@ -165,7 +207,7 @@ class CasperCalendarSelector extends PolymerElement {
    * @param {String} customHoursValue The current custom hours value.
    */
   __customHoursValueChanged (customHoursValue) {
-    this.meta = { ...this.meta, value: parseFloat(customHoursValue) };
+    this.meta = { ...this.meta, customValue: parseFloat(customHoursValue) };
   }
 }
 
