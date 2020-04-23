@@ -42,7 +42,7 @@ class CasperCalendarSelector extends PolymerElement {
         }
 
         #container paper-radio-group paper-radio-button .circle-container {
-display: flex;
+          display: flex;
           align-items: baseline;
         }
 
@@ -83,7 +83,7 @@ display: flex;
 
         <paper-input
           no-label-float
-          value="{{customHours}}"
+          value="{{__customHours}}"
           label="Introduza um número de horas">
           <casper-icon icon="fa-light:clock" slot="suffix"></casper-icon>
         </paper-input>
@@ -144,7 +144,7 @@ display: flex;
           // Hours options.
           { type: CASPER_CALENDAR_MODE_TYPES.FULL_HOURS, label: 'Dia Completo', mode: 'HOURS' },
           { type: CASPER_CALENDAR_MODE_TYPES.HALF_HOURS, label: 'Meio-dia', mode: 'HOURS' },
-{ type: CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS, label: 'Outro', mode: 'HOURS' },
+          { type: CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS, label: 'Outro', mode: 'HOURS' },
         ]
       },
       /**
@@ -236,21 +236,27 @@ display: flex;
     if (this.__isInputPristine) return;
 
     // Checks if the input contains any value or not.
-    if (!this.customHours) {
-      this.__paperInput.errorMessage = 'Este campo deve ser preenchido.';
-      this.__paperInput.invalid = true;
-      return;
+    if (!this.__customHours) {
+      return this.__markCustomHoursInputAsInvalid('Este campo deve ser preenchido.');
     }
 
     // Checks if the input contains a numeric value that must be inferior to 24.
-    if (!this.customHours.match(/^\d+(\.\d+)?$/g) || parseFloat(this.customHours) > 24) {
-      this.__paperInput.errorMessage = 'O valor deve ser numérico e inferior a 24h.';
-      this.__paperInput.invalid = true;
-      return;
+    if (!this.__customHours.match(/^\d+(\.\d+)?$/g) || parseFloat(this.__customHours) > 24) {
+      return this.__markCustomHoursInputAsInvalid('O valor deve ser numérico e inferior a 24h.');
     }
 
     // If we got here, it means the input passed all validations.
     this.__paperInput.invalid = false;
+    this.customHours = parseFloat(this.__customHours);
+  }
+
+  /**
+   * Helper method which will be called when the custom hours input contains an invalid value.
+   */
+  __markCustomHoursInputAsInvalid (errorMessage) {
+    this.__paperInput.errorMessage = errorMessage;
+    this.__paperInput.invalid = true;
+    this.customHours = 0;
   }
 }
 
