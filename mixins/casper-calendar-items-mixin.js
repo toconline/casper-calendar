@@ -75,7 +75,7 @@ export const CasperCalendarItemsMixin = superClass => {
           if (currentInterval.start !== currentDay) continue;
 
           // Decide the background color for the current interval.
-          let backgroundColor = 'rgba(var(--primary-color-rgb), 0.3)';
+          let backgroundColor = this.$.selector.getBackgroundColorForType(currentInterval.meta.type);
           if (currentInterval.backgroundColor) backgroundColor = currentInterval.backgroundColor;
           else if (currentItem.backgroundColor) backgroundColor = currentItem.backgroundColor;
 
@@ -170,6 +170,7 @@ export const CasperCalendarItemsMixin = superClass => {
                 [this.idInternalProperty]: intervalId,
                 start: currentDate.date(),
                 end: currentDate.date(),
+                meta: interval.meta,
                 tooltip: interval.tooltip,
                 backgroundColor: interval.backgroundColor
               });
