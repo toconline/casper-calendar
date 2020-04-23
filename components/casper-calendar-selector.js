@@ -35,12 +35,6 @@ class CasperCalendarSelector extends PolymerElement {
           display: flex;
         }
 
-        #container paper-radio-group paper-radio-button .color-square {
-          width: 15px;
-          height: 15px;
-          display: flex;
-        }
-
         #container paper-radio-group paper-radio-button .circle-container {
           display: flex;
           align-items: baseline;
