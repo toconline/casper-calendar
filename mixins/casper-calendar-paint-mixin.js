@@ -26,16 +26,24 @@ export const CasperCalendarPaintMixin = superClass => {
       // If the interval starts on the following years or ends in the previous years.
       if (date.start.year() > this.year || date.end.year() < this.year) return;
 
+      let color, backgroundColor;
+
+      // Calculate beforehand the color and background color that will be used when styling the cells.
+      if (paintActiveDate) {
+        backgroundColor = date.meta && date.meta.type
+          ? this.$.selector.getBackgroundColorForType(date.meta.type)
+          : this.__intervalBackgroundColor;
+
+        color = this.__getColorForBackground(backgroundColor);
+      }
+
       this.__executeForEachDayBetweenDates(currentDate => {
         const currentDateCell = this.__findCellByMonthAndDay(currentDate.month(), currentDate.date());
         if (!currentDateCell) return;
 
         if (paintActiveDate) {
-          currentDateCell.style.color = 'white';
-          currentDateCell.style.backgroundColor = date.meta && date.meta.type
-            ? this.$.selector.getBackgroundColorForType(date.meta.type)
-            : this.__intervalBackgroundColor;
-
+          currentDateCell.style.color = color;
+          currentDateCell.style.backgroundColor = backgroundColor;
         } else if (this.__activeDateIndexOfDay(currentDate) === -1) {
           // Only remove the styling from the cell, if there are no active dates that contain this day.
           currentDateCell.style.color = '';
@@ -84,6 +92,83 @@ export const CasperCalendarPaintMixin = superClass => {
      */
     __findCellByMonthAndDay (month, day) {
       return this.shadowRoot.querySelector(`.cell[data-month="${month}"][data-day="${day}"]`);
+    }
+
+    /**
+     * This method returns the text color that contrasts with the background color.
+     *
+     * @param {String} backgroundColor The background's color which can be in the following formats - (human-readable name),
+     * RGB, hexadecimal, CSS variables.
+     */
+    __getColorForBackground (backgroundColor) {
+      let backgroundColorRGB = {};
+
+      // CSS variables in the format of var(--primary-color).
+      if (backgroundColor.startsWith('rgb(')) backgroundColorRGB = this.__getRedGreenBlueFromRGB(backgroundColor);
+      else if (/^[a-z]+$/.test(backgroundColor)) backgroundColorRGB = this.__getRedGreenBlueFromHumanName(backgroundColor);
+      else if (backgroundColor.startsWith('#')) backgroundColorRGB = this.__getRedGreenBlueFromHexadecimal(backgroundColor);
+      else if (backgroundColor.startsWith('var(')) backgroundColorRGB = this.__getRedGreenBlueFromCSSVariable(backgroundColor);
+
+      // This means a recursion has occurred (either from __getRedGreenBlueFromCSSVariable or __getRedGreenBlueFromHumanName) and I already have the color.
+      if (['white', 'black'].includes(backgroundColorRGB)) return backgroundColorRGB;
+
+      return (
+        (backgroundColorRGB.red * 0.299) +
+        (backgroundColorRGB.green * 0.587) +
+        (backgroundColorRGB.blue * 0.114)
+      ) > 186 ? 'black' : 'white';
+    }
+
+    /**
+     * Returns an object with the red, blue and green properties from a CSS variable name like var(--primary-color).
+     *
+     * @param {String} cssVariable The CSS variable's name.
+     */
+    __getRedGreenBlueFromCSSVariable (cssVariable) {
+      const regexMatch = cssVariable.match(/^var\((?<cssVariable>--[-a-zA-Z]+)\)$/);
+
+      // We call this method again since the CSS variable might be defined as an hexadecimal, RGB.
+      return this.__getColorForBackground(getComputedStyle(document.body).getPropertyValue(regexMatch.groups.cssVariable).trim());
+    }
+
+    /**
+     * Returns an object with the red, blue and green properties from a human-readable name such as 'red' or 'aliceblue'.
+     *
+     * @param {String} humanName The color's human name.
+     */
+    __getRedGreenBlueFromHumanName (humanName) {
+      const canvasContext = document.createElement('canvas').getContext('2d');
+      canvasContext.fillStyle = humanName;
+
+      return this.__getColorForBackground(canvasContext.fillStyle);
+    }
+
+    /**
+     * Returns an object with the red, blue and green properties from an hexadecimal value like #FFFFFF.
+     *
+     * @param {String} hexadecimal The color's hexadecimal representation.
+     */
+    __getRedGreenBlueFromHexadecimal (hexadecimal) {
+      return {
+        red: parseInt(hexadecimal.substring(1, 3), 16),
+        green: parseInt(hexadecimal.substring(3, 5), 16),
+        blue: parseInt(hexadecimal.substring(5, 7), 16)
+      };
+    }
+
+    /**
+     * Returns an object with the red, blue and green properties from something like this rgb(255, 255, 255).
+     *
+     * @param {String} rgb The color's RGB representation.
+     */
+    __getRedGreenBlueFromRGB (rgb) {
+      const splitColors = rgb.substring(4, rgb.length - 1).split(',').map(color => color.trim());
+
+      return {
+        red: parseInt(splitColors[0].trim()),
+        green: parseInt(splitColors[1].trim()),
+        blue: parseInt(splitColors[2].trim()),
+      }
     }
   }
 };
