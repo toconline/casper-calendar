@@ -2,6 +2,9 @@
   "name": "@casper2020/casper-calendar",
   "version": "0.4.0",
   "dependencies": {
-    "@polymer/polymer": "^3.0.0"
+    "@casper2020/casper-icons": "^1.x",
+    "@polymer/paper-radio-button": "^3.x",
+    "@polymer/paper-radio-group": "^3.x",
+    "@polymer/polymer": "^3.x"
   }
 }

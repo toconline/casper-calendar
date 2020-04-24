@@ -3,6 +3,8 @@ import {
   CASPER_CALENDAR_MODE_TYPES
 } from '../casper-calendar-constants';
 
+import '@casper2020/casper-icons/casper-icon.js';
+import '@polymer/paper-input/paper-input.js';
 import '@polymer/paper-radio-group/paper-radio-group.js';
 import '@polymer/paper-radio-button/paper-radio-button.js';
 import { html, PolymerElement } from '@polymer/polymer/polymer-element.js';
