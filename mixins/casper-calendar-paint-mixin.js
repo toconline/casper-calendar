@@ -34,7 +34,7 @@ export const CasperCalendarPaintMixin = superClass => {
           ? this.$.selector.getBackgroundColorForType(date.meta.type)
           : this.__intervalBackgroundColor;
 
-        color = this.__getColorForBackground(backgroundColor);
+        color = this.__getContrastingTextColorForBackground(backgroundColor);
       }
 
       this.__executeForEachDayBetweenDates(currentDate => {
@@ -100,7 +100,7 @@ export const CasperCalendarPaintMixin = superClass => {
      * @param {String} backgroundColor The background's color which can be in the following formats - (human-readable name),
      * RGB, hexadecimal, CSS variables.
      */
-    __getColorForBackground (backgroundColor) {
+    __getContrastingTextColorForBackground (backgroundColor) {
       let backgroundColorRGB = {};
 
       // CSS variables in the format of var(--primary-color).
@@ -128,7 +128,7 @@ export const CasperCalendarPaintMixin = superClass => {
       const regexMatch = cssVariable.match(/^var\((?<cssVariable>--[-a-zA-Z]+)\)$/);
 
       // We call this method again since the CSS variable might be defined as an hexadecimal, RGB.
-      return this.__getColorForBackground(getComputedStyle(document.body).getPropertyValue(regexMatch.groups.cssVariable).trim());
+      return this.__getContrastingTextColorForBackground(getComputedStyle(document.body).getPropertyValue(regexMatch.groups.cssVariable).trim());
     }
 
     /**
@@ -140,7 +140,7 @@ export const CasperCalendarPaintMixin = superClass => {
       const canvasContext = document.createElement('canvas').getContext('2d');
       canvasContext.fillStyle = humanName;
 
-      return this.__getColorForBackground(canvasContext.fillStyle);
+      return this.__getContrastingTextColorForBackground(canvasContext.fillStyle);
     }
 
     /**
