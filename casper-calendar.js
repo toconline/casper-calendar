@@ -154,12 +154,15 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         #main-container {
           display: flex;
           user-select: none;
+          border-radius: 5px;
+          padding: 0 10px 10px;
           flex-direction: column;
+          background-color: #E4E4E4;
         }
 
         #main-container .row-container {
           display: none;
-          grid-template-rows: 30px;
+          grid-template-rows: 40px;
         }
 
         #main-container .row-container .cell {
@@ -168,19 +171,13 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 3px;
-          font-size: var(--casper-calendar--cell-font-size, 14px);
+          border-radius: 5px;
           position: relative;
           box-sizing: border-box;
-          border: 1px #F2F2F2 solid;
+          background-color: white;
+          border: 1px #E4E4E4 solid;
+          font-size: var(--casper-calendar--cell-font-size, 15px);
         }
-
-        /*
-        #main-container .row-container .cell:not(.cell--left-header):not(.cell--top-header)[active] {
-          color: var(--on-primary-color);
-          background-color: var(--primary-color);
-        }
-        */
 
         #main-container .row-container .cell:not(.cell--left-header):not(.cell--top-header):hover {
           cursor: pointer;
@@ -193,16 +190,17 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         }
 
         #main-container .row-container .cell.cell--weekend {
-          color: red;
-          background-color: #E4E4E4;
+          color: #ABABAB;
+          background-color: #EFEFEF;
         }
 
         #main-container .row-container .cell.cell--left-header {
           padding: 0 10px;
           align-items: center;
+          font-weight: bold;
           justify-content: space-between;
-          background-color: #E4E4E4;
           color: var(--primary-color);
+          background-color: rgba(var(--primary-color-rgb), 0.2);
         }
 
         #main-container .row-container .cell.cell--has-item .cell-content {
@@ -250,15 +248,16 @@ class CasperCalendar extends CasperCalendarItemsMixin(
 
         #main-container .row-container .cell.cell--top-header {
           display: flex;
+          font-weight: bold;
           align-items: center;
           justify-content: center;
-          background-color: #E4E4E4;
           color: var(--primary-color);
+          background-color: rgba(var(--primary-color-rgb), 0.2);
         }
 
         #main-container .row-container .cell.cell--top-header.cell--weekend {
-          color: red;
-          background-color: #E4E4E4;
+          color: #ababab;
+          background-color: #efefef;
         }
 
         #main-container .row-container .cell .holiday {
@@ -293,6 +292,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         .item-row-container > div {
           box-sizing: border-box;
           border: 1px #F2F2F2 solid;
+          background-color: white;
         }
 
         .item-row-container > div:first-of-type {
@@ -312,15 +312,15 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         }
       </style>
 
-      <casper-calendar-selector
-        id="selector"
-        mode="[[mode]]"
-        meta="{{__intervalMeta}}"
-        custom-hours="{{customHours}}"
-        background-color="{{__intervalBackgroundColor}}">
-      </casper-calendar-selector>
-
       <div id="main-container">
+        <casper-calendar-selector
+          id="selector"
+          mode="[[mode]]"
+          meta="{{__intervalMeta}}"
+          custom-hours="{{customHours}}"
+          background-color="{{__intervalBackgroundColor}}">
+        </casper-calendar-selector>
+
         <div class="row-container">
           <!--Year selector-->
           <div class="cell cell--left-header cell--year-header">
@@ -431,7 +431,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
     for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
       months.push({
         index: monthIndex,
-        name: moment.months()[monthIndex].substring(0, 3),
+        name: moment.months()[monthIndex]
       });
 
       // Get the month's number of days and its first week day.

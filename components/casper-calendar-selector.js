@@ -15,8 +15,8 @@ class CasperCalendarSelector extends PolymerElement {
       <style>
         #container {
           display: flex;
-          padding: 10px;
           align-items: center;
+          padding: 0 10px;
         }
 
         #container label {
@@ -35,18 +35,10 @@ class CasperCalendarSelector extends PolymerElement {
           display: flex;
         }
 
-        #container paper-radio-group paper-radio-button .circle-container {
-          display: flex;
-          align-items: baseline;
-        }
-
-        #container paper-radio-group paper-radio-button .circle-container .circle {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          overflow: hidden;
-          margin-left: 4px;
-          border: 1px solid black;
+        #container paper-radio-group paper-radio-button .radio-button-label {
+          color: white;
+          padding: 5px 10px;
+          border-radius: 20px;
         }
 
         #container paper-input {
@@ -67,10 +59,9 @@ class CasperCalendarSelector extends PolymerElement {
         <paper-radio-group>
           <template is="dom-repeat" items="[[__options]]">
             <paper-radio-button data-mode$="[[item.mode]]" name="[[item.type]]">
-              <div class="circle-container">
+              <span class="radio-button-label" style="background-color: [[getBackgroundColorForType(item.type, __backgroundColors)]];">
                 [[item.label]]
-                <div class="circle" style="background-color: [[getBackgroundColorForType(item.type, __backgroundColors)]];"></div>
-              </div>
+              </span>
             </paper-radio-button>
           </template>
         </paper-radio-group>
@@ -78,8 +69,8 @@ class CasperCalendarSelector extends PolymerElement {
         <paper-input
           no-label-float
           value="{{__customHours}}"
-          label="Introduza um número de horas">
-          <casper-icon icon="fa-light:clock" slot="suffix"></casper-icon>
+          label="Introduza o número de horas">
+          <casper-icon icon="fa-light:info-circle" slot="suffix" tooltip="Este valor deverá ser numérico ser compreendido entre 0 e 24"></casper-icon>
         </paper-input>
       </div>
     `;
@@ -149,12 +140,12 @@ class CasperCalendarSelector extends PolymerElement {
       __backgroundColors: {
         type: Object,
         value: {
-          FULL_DAY: 'var(--primary-color)',
-          ONLY_MORNING: 'rgba(var(--primary-color-rgb), 0.66)',
-          ONLY_AFTERNOON: 'rgba(var(--primary-color-rgb), 0.33)',
-          FULL_HOURS: 'var(--primary-color)',
-          HALF_HOURS: 'rgba(var(--primary-color-rgb), 0.66)',
-          CUSTOM_HOURS: 'rgba(var(--primary-color-rgb), 0.33)'
+          FULL_DAY: 'var(--status-orange)',
+          ONLY_MORNING: 'var(--status-blue)',
+          ONLY_AFTERNOON: 'var(--status-green)',
+          FULL_HOURS: 'var(--status-orange)',
+          HALF_HOURS: 'var(--status-blue)',
+          CUSTOM_HOURS: 'var(--status-green)'
         }
       }
     }
@@ -166,6 +157,7 @@ class CasperCalendarSelector extends PolymerElement {
     this.__isInputPristine = true;
 
     this.__paperInput = this.shadowRoot.querySelector('paper-input');
+    this.__paperInput.allowedPattern = /[\d\.]/;
     this.__paperInput.addEventListener('blur', () => this.__validateCustomHoursInput());
     this.__paperInput.addEventListener('value-changed', () => this.__validateCustomHoursInput());
     this.__paperInput.addEventListener('focus', () => { this.__isInputPristine = false; });
@@ -227,30 +219,19 @@ class CasperCalendarSelector extends PolymerElement {
    * This method is used to validate the custom hours input's value.
    */
   __validateCustomHoursInput () {
+    // Do not validate if the input was not focused yet.
     if (this.__isInputPristine) return;
 
-    // Checks if the input contains any value or not.
-    if (!this.__customHours) {
-      return this.__markCustomHoursInputAsInvalid('Este campo deve ser preenchido.');
-    }
-
-    // Checks if the input contains a numeric value that must be inferior to 24.
-    if (!this.__customHours.match(/^\d+(\.\d+)?$/g) || parseFloat(this.__customHours) > 24) {
-      return this.__markCustomHoursInputAsInvalid('O valor deve ser numérico e inferior a 24h.');
+    // Validate if the input contains a numeric value between 0 and 24.
+    if (!this.__customHours || !this.__customHours.match(/^\d+(\.\d+)?$/g) || parseFloat(this.__customHours) > 24) {
+      this.__paperInput.invalid = true;
+      this.customHours = 0;
+      return;
     }
 
     // If we got here, it means the input passed all validations.
     this.__paperInput.invalid = false;
     this.customHours = parseFloat(this.__customHours);
-  }
-
-  /**
-   * Helper method which will be called when the custom hours input contains an invalid value.
-   */
-  __markCustomHoursInputAsInvalid (errorMessage) {
-    this.__paperInput.errorMessage = errorMessage;
-    this.__paperInput.invalid = true;
-    this.customHours = 0;
   }
 }
 

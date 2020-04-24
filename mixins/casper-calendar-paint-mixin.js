@@ -5,7 +5,11 @@ export const CasperCalendarPaintMixin = superClass => {
      * This method paints the current active dates.
      */
     __paintActiveDates () {
-      this.shadowRoot.querySelectorAll('.cell[style]').forEach(cell => cell.style.backgroundColor = '');
+      // Remove both the background color and the text color.
+      this.shadowRoot.querySelectorAll('.cell[style]').forEach(cell => {
+        cell.style.color = '';
+        cell.style.backgroundColor = '';
+      });
 
       if (this.activeDates.length > 0) {
         this.activeDates.forEach(activeDate => this.__paintDate(activeDate));
@@ -27,12 +31,14 @@ export const CasperCalendarPaintMixin = superClass => {
         if (!currentDateCell) return;
 
         if (paintActiveDate) {
+          currentDateCell.style.color = 'white';
           currentDateCell.style.backgroundColor = date.meta && date.meta.type
             ? this.$.selector.getBackgroundColorForType(date.meta.type)
             : this.__intervalBackgroundColor;
 
         } else if (this.__activeDateIndexOfDay(currentDate) === -1) {
-          // Only remove the active attribute from the cell, if there are no active dates that contain this day.
+          // Only remove the styling from the cell, if there are no active dates that contain this day.
+          currentDateCell.style.color = '';
           currentDateCell.style.backgroundColor = '';
         }
       }, date.start, date.end, true);
