@@ -108,6 +108,15 @@ class CasperCalendarSelector extends PolymerElement {
         notify: true
       },
       /**
+       * This property allows the developer to override the default background colors when selecting ranges.
+       *
+       * @type {Object}
+       */
+      overrideBackgroundColors: {
+        type: Object,
+        observer: '__overrideBackgroundColorsChanged'
+      },
+      /**
        * The currently custom value that the user introduced.
        *
        * @type {Number}
@@ -183,10 +192,9 @@ class CasperCalendarSelector extends PolymerElement {
   __modeChanged () {
     afterNextRender(this, () => {
       this.__radioGroup = this.__radioGroup || this.shadowRoot.querySelector('paper-radio-group');
-
       this.__radioGroup.addEventListener('selected-changed', event => {
-        const selectedValue = event.detail.value;
-        const isCustomHoursSelected = selectedValue === CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS;
+        this.__selectedType = event.detail.value;
+        const isCustomHoursSelected = this.__selectedType === CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS;
 
         // Disable the custom value input unless that option is currently selected.
         this.__isCalendarInHoursMode()
@@ -194,8 +202,8 @@ class CasperCalendarSelector extends PolymerElement {
           : this.__paperInput.removeAttribute('visible');
         this.__paperInput.disabled = !isCustomHoursSelected;
 
-        this.meta = { type: selectedValue };
-        this.backgroundColor = this.__backgroundColors[selectedValue];
+        this.meta = { type: this.__selectedType };
+        this.backgroundColor = this.__backgroundColors[this.__selectedType];
 
         // Automatically focus the input if the user selected the custom hours opion.
         if (isCustomHoursSelected) {
@@ -234,6 +242,21 @@ class CasperCalendarSelector extends PolymerElement {
     // If we got here, it means the input passed all validations.
     this.__paperInput.invalid = false;
     this.customHours = parseFloat(this.__customHours);
+  }
+
+  /**
+   * This method gets invoked when the overrideBackgroundColors property changes.
+   */
+  __overrideBackgroundColorsChanged () {
+    this.__backgroundColors = {
+      ...this.__backgroundColors,
+      ...this.overrideBackgroundColors
+    };
+
+    // Also change the current background color if it was overwritten.
+    if (Object.keys(this.overrideBackgroundColors).includes(this.__selectedType)) {
+      this.backgroundColor = this.overrideBackgroundColors[this.__selectedType];
+    }
   }
 }
 

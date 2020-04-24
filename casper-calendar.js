@@ -121,6 +121,15 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         notify: true
       },
       /**
+       * This property allows the developer to override the default background colors when selecting ranges.
+       *
+       * @type {Object}
+       */
+      overrideBackgroundColors: {
+        type: Object,
+        observer: '__paintActiveDates'
+      },
+      /**
        * This array contains the list of holidays.
        */
       __holidays: {
@@ -318,7 +327,8 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           mode="[[mode]]"
           meta="{{__intervalMeta}}"
           custom-hours="{{customHours}}"
-          background-color="{{__intervalBackgroundColor}}">
+          background-color="{{__intervalBackgroundColor}}"
+          override-background-colors="{{overrideBackgroundColors}}">
         </casper-calendar-selector>
 
         <div class="row-container">
