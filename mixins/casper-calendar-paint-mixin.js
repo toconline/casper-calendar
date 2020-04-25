@@ -125,10 +125,10 @@ export const CasperCalendarPaintMixin = superClass => {
      * @param {String} cssVariable The CSS variable's name.
      */
     __getRedGreenBlueFromCSSVariable (cssVariable) {
-      const regexMatch = cssVariable.match(/^var\((?<cssVariable>--[-a-zA-Z]+)\)$/);
+      const regexMatch = cssVariable.match(/^var\((--[-a-zA-Z]+)\)$/);
 
       // We call this method again since the CSS variable might be defined as an hexadecimal, RGB.
-      return this.__getContrastingTextColorForBackground(getComputedStyle(document.body).getPropertyValue(regexMatch.groups.cssVariable).trim());
+      return this.__getContrastingTextColorForBackground(getComputedStyle(document.body).getPropertyValue(regexMatch[1]).trim());
     }
 
     /**
