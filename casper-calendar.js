@@ -15,10 +15,6 @@ class CasperCalendar extends CasperCalendarItemsMixin(
     CasperCalendarMouseEventsMixin(
       CasperCalendarActiveDatesMixin(PolymerElement)))) {
 
-  static get is () {
-    return 'casper-calendar';
-  }
-
   static get properties () {
     return {
       /**
@@ -618,4 +614,4 @@ class CasperCalendar extends CasperCalendarItemsMixin(
   }
 }
 
-customElements.define(CasperCalendar.is, CasperCalendar);
+customElements.define('casper-calendar', CasperCalendar);
