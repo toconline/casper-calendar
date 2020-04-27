@@ -1,6 +1,6 @@
 {
   "name": "@casper2020/casper-calendar",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "dependencies": {
     "@casper2020/casper-icons": "^1.x",
     "@polymer/paper-radio-button": "^3.x",
