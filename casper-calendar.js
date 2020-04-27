@@ -1,3 +1,4 @@
+
 import './components/casper-calendar-selector.js';
 import { CASPER_CALENDAR_MODES } from './casper-calendar-constants.js';
 import { CasperCalendarItemsMixin } from './mixins/casper-calendar-items-mixin.js';
@@ -27,17 +28,6 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         value: window.app
       },
       /**
-       * The year that is currently being displayed on the calendar.
-       *
-       * @type {Number}
-       */
-      year: {
-        type: Number,
-        notify: true,
-        value: new Date().getFullYear(),
-        observer: '__yearChanged'
-      },
-      /**
        * The date range that is currently active.
        *
        * @type {Array}
@@ -48,13 +38,31 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         notify: true
       },
       /**
-       * The list of items for each month of the current year.
+       * The hours value that will be used when the user decides to input a custom number of hours.
        *
-       * @type {Object}
+       * @type {Number}
        */
-      items: {
-        type: Object,
-        observer: '__itemsChanged'
+      customHours: {
+        type: Number,
+        notify: true
+      },
+      /**
+       * When this flag is set to true, the buttons that navigate throughout the years disappear.
+       *
+       * @type {Boolean}
+       */
+      disableYearNavigation: {
+        type: Boolean,
+        value: false
+      },
+      /**
+       * This property allows the developer to highlight a specific month for visibility purposes.
+       *
+       * @type {Number}
+       */
+      highlightedMonth: {
+        type: Number,
+        observer: '__highlightedMonthChanged'
       },
       /**
        * This property contains the resource that will return the list of holidays for the calendar.
@@ -75,21 +83,6 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         value: 'year'
       },
       /**
-       * When this flag is set to true, the buttons that navigate throughout the years disappear.
-       *
-       * @type {Boolean}
-       */
-      disableYearNavigation: {
-        type: Boolean,
-        value: false
-      },
-      /**
-       * This property when set, limits the number of active dates can be selected simultaneously.
-       */
-      maximumNumberActiveDates: {
-        type: Number
-      },
-      /**
        * Name of internal property that will be used to identify items and intervals.
        *
        * @type {String}
@@ -97,6 +90,21 @@ class CasperCalendar extends CasperCalendarItemsMixin(
       idInternalProperty: {
         type: String,
         value: '__identifier'
+      },
+      /**
+       * The list of items for each month of the current year.
+       *
+       * @type {Object}
+       */
+      items: {
+        type: Object,
+        observer: '__itemsChanged'
+      },
+      /**
+       * This property when set, limits the number of active dates can be selected simultaneously.
+       */
+      maximumNumberActiveDates: {
+        type: Number
       },
       /**
        * The mode in which the calendar currently is which by default is days.
@@ -108,15 +116,6 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         value: CASPER_CALENDAR_MODES.DAYS
       },
       /**
-       * The hours value that will be used when the user decides to input a custom number of hours.
-       *
-       * @type {Number}
-       */
-      customHours: {
-        type: Number,
-        notify: true
-      },
-      /**
        * This property allows the developer to override the default background colors when selecting ranges.
        *
        * @type {Object}
@@ -124,6 +123,17 @@ class CasperCalendar extends CasperCalendarItemsMixin(
       overrideBackgroundColors: {
         type: Object,
         observer: '__paintActiveDates'
+      },
+      /**
+       * The year that is currently being displayed on the calendar.
+       *
+       * @type {Number}
+       */
+      year: {
+        type: Number,
+        notify: true,
+        value: new Date().getFullYear(),
+        observer: '__yearChanged'
       },
       /**
        * This array contains the list of holidays.
@@ -172,7 +182,6 @@ class CasperCalendar extends CasperCalendarItemsMixin(
 
         #main-container .row-container .cell {
           flex: 1;
-          border: 0;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -182,6 +191,24 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           background-color: white;
           border: 1px #E4E4E4 solid;
           font-size: var(--casper-calendar--cell-font-size, 15px);
+        }
+
+        #main-container .row-container.row-container--highlighted {
+          border-radius: 5px;
+          border: 2px solid var(--dark-primary-color);
+        }
+
+        #main-container .row-container.row-container--highlighted .cell {
+          border-top: none;
+          border-bottom: none;
+        }
+
+        #main-container .row-container.row-container--highlighted .cell:first-of-type {
+          border-left: none;
+        }
+
+        #main-container .row-container.row-container--highlighted .cell:last-of-type {
+          border-right: none;
         }
 
         #main-container .row-container .cell:not(.cell--left-header):not(.cell--top-header):hover {
@@ -398,6 +425,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         this.__paintTodayCell();
         this.__paintActiveDates();
         this.__paintHolidayCells();
+        this.__highlightedMonthChanged();
       });
     });
   }
@@ -611,6 +639,21 @@ class CasperCalendar extends CasperCalendarItemsMixin(
     this[propertyLockName] = true;
     this[propertyName] = propertyValue;
     this[propertyLockName] = false;
+  }
+
+
+  /**
+   * This observer gets fired when the highlighted month property changes.
+   */
+  __highlightedMonthChanged () {
+    if (this.__isComponentInitializing) return;
+
+    this.shadowRoot.querySelectorAll(`.row-container`).forEach(rowContainer => rowContainer.classList.remove('row-container--highlighted'));
+
+    // The developer might attempting to not highlight any month.
+    if (![null, undefined].includes(this.highlightedMonth)) {
+      this.shadowRoot.querySelector(`.row-container[data-month="${this.highlightedMonth}"]`).classList.add('row-container--highlighted');
+    }
   }
 }
 
