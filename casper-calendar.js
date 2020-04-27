@@ -287,6 +287,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         /* Item row styling */
         .item-row-container {
           display: grid;
+          background-color: white;
           grid-template-rows: 30px;
         }
 
@@ -297,7 +298,6 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         .item-row-container > div {
           box-sizing: border-box;
           border: 1px #F2F2F2 solid;
-          background-color: white;
         }
 
         .item-row-container > div:first-of-type {
