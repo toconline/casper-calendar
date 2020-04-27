@@ -232,7 +232,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           font-weight: bold;
           justify-content: space-between;
           color: var(--primary-color);
-          background-color: rgba(var(--primary-color-rgb), 0.2);
+          background-color: var(--light-primary-color);
         }
 
         #main-container .row-container .cell.cell--has-item .cell-content {
@@ -284,7 +284,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           align-items: center;
           justify-content: center;
           color: var(--primary-color);
-          background-color: rgba(var(--primary-color-rgb), 0.2);
+          background-color: var(--light-primary-color);
         }
 
         #main-container .row-container .cell.cell--top-header.cell--weekend {
