@@ -1,5 +1,6 @@
 import moment from 'moment/src/moment.js';
 import { templatize } from '@polymer/polymer/lib/utils/templatize.js';
+import { afterNextRender } from '@polymer/polymer/lib/utils/render-status.js';
 
 export const CasperCalendarItemsMixin = superClass => {
   return class extends superClass {
@@ -79,20 +80,15 @@ export const CasperCalendarItemsMixin = superClass => {
           if (currentInterval.backgroundColor) backgroundColor = currentInterval.backgroundColor;
           else if (currentItem.backgroundColor) backgroundColor = currentItem.backgroundColor;
 
-          let currentIntervalStyles = `
+          const currentIntervalStyles = `
             background-color: ${backgroundColor};
             grid-column: span ${currentInterval.end - currentInterval.start + 1};
           `;
 
-          if (currentInterval.halfDay) {
-            currentIntervalStyles = currentInterval.onlyMorning
-              ? `${currentIntervalStyles} height: 50%;`
-              : `${currentIntervalStyles} height: 50%; align-self: end;`;
-          }
-
           currentItemIntervals.push({
+            styles: currentIntervalStyles,
             tooltip: currentInterval.tooltip,
-            styles: currentIntervalStyles
+            [this.idInternalProperty]: currentInterval[this.idInternalProperty],
           });
         }
 
@@ -212,6 +208,47 @@ export const CasperCalendarItemsMixin = superClass => {
      */
     __getMonthItems (month) {
       return this.__itemsPerMonth && this.__itemsPerMonth.hasOwnProperty(month) ? this.__itemsPerMonth[month] : [];
+    }
+
+    /**
+     * This method tries to retrieve a context menu that might've been slotted.
+     */
+    __setupContextMenu () {
+      this.__contextMenu = this.shadowRoot
+        .querySelector('slot[name="context-menu"]')
+        .assignedElements()
+        .find(assignedElement => assignedElement.nodeName && assignedElement.nodeName.toLowerCase() === 'casper-context-menu');
+
+      if (this.__contextMenu) {
+        this.__contextMenu.dynamicAlign = true;
+        this.__contextMenu.horizontalAlign = 'auto';
+        this.__contextMenu.addEventListener('opened-changed', event => {
+          if (!event.detail.value) {
+            this.activeItem = undefined;
+            this.activeItemInterval = undefined;
+          }
+        });
+      }
+    }
+
+    /**
+     * Click listener that gets fired when the user clicks on an interval.
+     *
+     * @param {Object} event The event's object.
+     */
+    __openContextMenu (event) {
+      if (!this.__contextMenu) return;
+
+      // Change the current active item using the __identifier property which consists of the item and interval index.
+      const [itemIndex, itemIntervalIndex] = event.target.dataset.identifier.split('-');
+      this.activeItem = this.items[itemIndex];
+      this.activeItemInterval = this.items[itemIndex].intervals[itemIntervalIndex];
+
+      // Move the context menu to the correct item.
+      this.__contextMenu.verticalOffset = event.target.getBoundingClientRect().height;
+      this.__contextMenu.positionTarget = event.target;
+      this.__contextMenu.open();
+      this.app.tooltip.hide();
     }
   }
 };

@@ -19,15 +19,6 @@ class CasperCalendar extends CasperCalendarItemsMixin(
   static get properties () {
     return {
       /**
-       * The global application's app object.
-       *
-       * @type {Object}
-       */
-      app: {
-        type: Object,
-        value: window.app
-      },
-      /**
        * The date range that is currently active.
        *
        * @type {Array}
@@ -36,6 +27,33 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         type: Array,
         value: [],
         notify: true
+      },
+      /**
+       * The item that is currently active and displaying a context menu.
+       *
+       * @type {Object}
+       */
+       activeItem: {
+         type: Object,
+         notify: true
+       },
+       /**
+        * The interval that is currently active and displaying a context menu.
+        *
+        * @type {Object}
+        */
+        activeItemInterval: {
+          type: Object,
+          notify: true
+        },
+      /**
+       * The global application's app object.
+       *
+       * @type {Object}
+       */
+      app: {
+        type: Object,
+        value: window.app
       },
       /**
        * The hours value that will be used when the user decides to input a custom number of hours.
@@ -396,16 +414,23 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         <div style$="[[itemRowContainerStyle]]" class="item-row-container">
           <div>[[title]]</div>
           <template is="dom-repeat" items="[[intervals]]" as="interval">
-            <div style$="[[interval.styles]]" tooltip="[[interval.tooltip]]"></div>
+            <div
+              style$="[[interval.styles]]"
+              tooltip="[[interval.tooltip]]"
+              data-identifier$="[[interval.__identifier]]"
+              on-click="__openContextMenu"></div>
           </template>
         </div>
       </template>
+
+      <slot name="context-menu"></slot>
     `;
   }
 
   ready () {
     super.ready();
 
+    this.__setupContextMenu();
     this.addEventListener('mousemove', event => this.app.tooltip.mouseMoveToolip(event));
     this.$.templateRepeat.addEventListener('dom-change', () => {
       afterNextRender(this, () => {
