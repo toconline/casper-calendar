@@ -6,7 +6,7 @@ export const CasperCalendarPaintMixin = superClass => {
      */
     __paintActiveDates () {
       // Remove both the background color and the text color.
-      this.shadowRoot.querySelectorAll('.cell[style]').forEach(cell => {
+      this.shadowRoot.querySelectorAll('.row-container .cell[style]').forEach(cell => {
         cell.style.color = '';
         cell.style.backgroundColor = '';
       });
