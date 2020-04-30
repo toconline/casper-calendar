@@ -60,7 +60,7 @@ class CasperCalendarSelector extends PolymerElement {
       <div id="container">
         <label>Escolha uma opção:</label>
 
-        <paper-radio-group>
+        <paper-radio-group selected="{{activeDateType}}">
           <template is="dom-repeat" items="[[__options]]">
             <paper-radio-button data-mode$="[[item.mode]]" name="[[item.type]]">
               <span class="radio-button-label" style="background-color: [[getBackgroundColorForType(item.type, __backgroundColors)]];">
@@ -83,22 +83,14 @@ class CasperCalendarSelector extends PolymerElement {
   static get properties () {
     return {
       /**
-       * The mode in which the calendar is currently working.
+       * The current date type that will saved in the new active dates.
        *
        * @type {String}
        */
-      mode: {
+      activeDateType: {
         type: String,
-        observer: '__modeChanged'
-      },
-      /**
-       * The meta information that should be saved in the new active dates.
-       *
-       * @type {Object}
-       */
-      meta: {
-        type: Object,
-        notify: true
+        notify: true,
+        observer: '__activeDateTypeChanged'
       },
       /**
        * The background color that should be applied when selecting the new active dates.
@@ -110,15 +102,6 @@ class CasperCalendarSelector extends PolymerElement {
         notify: true
       },
       /**
-       * This property allows the developer to override the default background colors when selecting ranges.
-       *
-       * @type {Object}
-       */
-      overrideBackgroundColors: {
-        type: Object,
-        observer: '__overrideBackgroundColorsChanged'
-      },
-      /**
        * The currently custom value that the user introduced.
        *
        * @type {Number}
@@ -126,6 +109,24 @@ class CasperCalendarSelector extends PolymerElement {
       customHours: {
         type: Number,
         notify: true
+      },
+      /**
+       * The mode in which the calendar is currently working.
+       *
+       * @type {String}
+       */
+      mode: {
+        type: String,
+        observer: '__modeChanged'
+      },
+      /**
+       * This property allows the developer to override the default background colors when selecting ranges.
+       *
+       * @type {Object}
+       */
+      overrideBackgroundColors: {
+        type: Object,
+        observer: '__overrideBackgroundColorsChanged'
       },
       /**
        * The different options that the user can select in both modes.
@@ -193,26 +194,6 @@ class CasperCalendarSelector extends PolymerElement {
    */
   __modeChanged () {
     afterNextRender(this, () => {
-      this.__radioGroup = this.__radioGroup || this.shadowRoot.querySelector('paper-radio-group');
-      this.__radioGroup.addEventListener('selected-changed', event => {
-        this.__selectedType = event.detail.value;
-        const isCustomHoursSelected = this.__selectedType === CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS;
-
-        // Disable the custom value input unless that option is currently selected.
-        this.__isCalendarInHoursMode()
-          ? this.__paperInput.setAttribute('visible', true)
-          : this.__paperInput.removeAttribute('visible');
-        this.__paperInput.disabled = !isCustomHoursSelected;
-
-        this.meta = { type: this.__selectedType };
-        this.backgroundColor = this.__backgroundColors[this.__selectedType];
-
-        // Automatically focus the input if the user selected the custom hours opion.
-        if (isCustomHoursSelected) {
-          this.__paperInput.focus();
-        }
-      });
-
       // Display the correct options given the new mode.
       this.shadowRoot.querySelectorAll('paper-radio-button').forEach(radioButton => {
         radioButton.dataset.mode === this.mode
@@ -220,11 +201,33 @@ class CasperCalendarSelector extends PolymerElement {
           : radioButton.removeAttribute('visible');
       });
 
+      // Display the custom hours input depending on the currently selected mode.
+      this.__isCalendarInHoursMode()
+        ? this.__paperInput.setAttribute('visible', true)
+        : this.__paperInput.removeAttribute('visible');
+
       // Pre-select the first option of the days or hours mode.
-      this.__radioGroup.selected = this.__isCalendarInDaysMode()
+      this.activeDateType = this.__isCalendarInDaysMode()
         ? CASPER_CALENDAR_MODE_TYPES.FULL_DAY
         : CASPER_CALENDAR_MODE_TYPES.FULL_HOURS;
     });
+  }
+
+  /**
+   * Observer that gets fired when the active date type changes.
+   */
+  __activeDateTypeChanged () {
+    const isCustomHoursSelected = this.activeDateType === CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS;
+
+    // Disable the custom value input unless that option is currently selected.
+    this.__paperInput.disabled = !isCustomHoursSelected;
+
+    this.backgroundColor = this.__backgroundColors[this.activeDateType];
+
+    // Automatically focus the input if the user selected the custom hours opion.
+    if (isCustomHoursSelected) {
+      this.__paperInput.focus();
+    }
   }
 
   /**

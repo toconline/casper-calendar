@@ -29,6 +29,15 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         notify: true
       },
       /**
+       * The current date type that will saved in the new active dates.
+       *
+       * @type {String}
+       */
+      activeDateType: {
+        type: String,
+        notify: true,
+      },
+      /**
        * The interval that is currently active and displaying a context menu.
        *
        * @type {Object}
@@ -352,8 +361,8 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         <casper-calendar-selector
           id="selector"
           mode="[[mode]]"
-          meta="{{__intervalMeta}}"
           custom-hours="{{customHours}}"
+          active-date-type="{{activeDateType}}"
           background-color="{{__intervalBackgroundColor}}"
           override-background-colors="{{overrideBackgroundColors}}">
         </casper-calendar-selector>

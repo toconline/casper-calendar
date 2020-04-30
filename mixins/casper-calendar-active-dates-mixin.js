@@ -77,7 +77,7 @@ export const CasperCalendarActiveDatesMixin = superClass => {
       });
 
       // Add the meta information.
-      newActiveDate.meta = this.__intervalMeta;
+      newActiveDate.meta = { type: this.activeDateType };
 
       return [...updatedActiveDates, newActiveDate].map(activeDate => ({
         ...activeDate,
