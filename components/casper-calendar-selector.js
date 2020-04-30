@@ -108,7 +108,8 @@ class CasperCalendarSelector extends PolymerElement {
        */
       customHours: {
         type: Number,
-        notify: true
+        notify: true,
+        observer: '__customHoursChanged'
       },
       /**
        * The mode in which the calendar is currently working.
@@ -238,7 +239,7 @@ class CasperCalendarSelector extends PolymerElement {
     if (this.__isInputPristine) return;
 
     // Validate if the input contains a numeric value between 0 and 24.
-    if (!this.__customHours || !this.__customHours.match(/^\d+(\.\d+)?$/g) || parseFloat(this.__customHours) > 24) {
+    if (!this.__validateCustomHours(this.__customHours)) {
       this.__paperInput.invalid = true;
       this.customHours = 0;
       return;
@@ -247,6 +248,30 @@ class CasperCalendarSelector extends PolymerElement {
     // If we got here, it means the input passed all validations.
     this.__paperInput.invalid = false;
     this.customHours = parseFloat(this.__customHours);
+  }
+
+  /**
+   * Observer that gets fired when the custom hours property changes.
+   */
+  __customHoursChanged () {
+    if (!this.__validateCustomHours(this.customHours)) {
+      this.customHours = 0
+      this.__customHours = '';
+    } else {
+      this.__customHours = this.customHours;
+    }
+  }
+
+  /**
+   * This method evaluates if the parameter received is a valid value for the custom hours property which must be numeric and between 0 and 24.
+   *
+   * @param {Number | String} customHours The value that the method will evaluate.
+   */
+  __validateCustomHours (customHours) {
+    return customHours &&
+      parseFloat(customHours) >= 0 &&
+      parseFloat(customHours) <= 24 &&
+      customHours.toString().match(/^\d+(\.\d+)?$/g);
   }
 
   /**
