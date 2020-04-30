@@ -220,6 +220,7 @@ export const CasperCalendarItemsMixin = superClass => {
         this.__contextMenu.horizontalAlign = 'auto';
         this.__contextMenu.addEventListener('opened-changed', event => {
           if (!event.detail.value) {
+            this.activeItem = undefined;
             this.activeItemInterval = undefined;
           }
         });
@@ -236,6 +237,7 @@ export const CasperCalendarItemsMixin = superClass => {
 
       // Change the current active item using the __identifier property which consists of the item and interval index.
       const [itemIndex, itemIntervalIndex] = event.target.dataset.identifier.split('-');
+      this.activeItem = this.items[itemIndex];
       this.activeItemInterval = this.items[itemIndex].intervals[itemIntervalIndex];
 
       // Move the context menu to the correct item.

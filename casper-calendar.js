@@ -38,7 +38,16 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         notify: true,
       },
       /**
-       * The interval that is currently active and displaying a context menu.
+       * The item that is currently active and displaying a context menu.
+       *
+       * @type {Object}
+       */
+      activeItem: {
+        type: Object,
+        notify: true
+      },
+      /**
+       * The item's interval that is currently active and displaying a context menu.
        *
        * @type {Object}
        */
