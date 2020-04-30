@@ -144,11 +144,9 @@ export const CasperCalendarItemsMixin = superClass => {
             // When the item does not exists, create it.
             if (!existingItem) {
               existingItem = {
-                [this.idInternalProperty]: itemId,
+                ...item,
                 intervals: [],
-                title: item.title,
-                backgroundColor: item.backgroundColor,
-                rowBackgroundColor: item.rowBackgroundColor
+                [this.idInternalProperty]: itemId,
               };
 
               this.__itemsPerMonth[currentDate.month()].push(existingItem);
@@ -163,12 +161,10 @@ export const CasperCalendarItemsMixin = superClass => {
             } else {
               // Create the new interval.
               existingItem.intervals.push({
-                [this.idInternalProperty]: intervalId,
-                start: currentDate.date(),
+                ...interval,
                 end: currentDate.date(),
-                meta: interval.meta,
-                tooltip: interval.tooltip,
-                backgroundColor: interval.backgroundColor
+                start: currentDate.date(),
+                [this.idInternalProperty]: intervalId,
               });
             }
           }, moment(interval.start), moment(interval.end), true);
@@ -224,7 +220,6 @@ export const CasperCalendarItemsMixin = superClass => {
         this.__contextMenu.horizontalAlign = 'auto';
         this.__contextMenu.addEventListener('opened-changed', event => {
           if (!event.detail.value) {
-            this.activeItem = undefined;
             this.activeItemInterval = undefined;
           }
         });
@@ -241,7 +236,6 @@ export const CasperCalendarItemsMixin = superClass => {
 
       // Change the current active item using the __identifier property which consists of the item and interval index.
       const [itemIndex, itemIntervalIndex] = event.target.dataset.identifier.split('-');
-      this.activeItem = this.items[itemIndex];
       this.activeItemInterval = this.items[itemIndex].intervals[itemIntervalIndex];
 
       // Move the context menu to the correct item.

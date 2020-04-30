@@ -17,8 +17,8 @@ class CasperCalendarSelector extends PolymerElement {
       <style>
         #container {
           display: flex;
+          padding: 5px 10px;
           align-items: center;
-          padding: 0 10px;
         }
 
         #container label {
@@ -46,6 +46,7 @@ class CasperCalendarSelector extends PolymerElement {
         #container paper-input {
           width: 20%;
           display: none;
+          margin-left: 10px;
           --paper-input-container: {
             padding: 0;
           }
@@ -58,6 +59,7 @@ class CasperCalendarSelector extends PolymerElement {
 
       <div id="container">
         <label>Escolha uma opção:</label>
+
         <paper-radio-group>
           <template is="dom-repeat" items="[[__options]]">
             <paper-radio-button data-mode$="[[item.mode]]" name="[[item.type]]">

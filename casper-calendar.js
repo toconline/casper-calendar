@@ -29,23 +29,14 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         notify: true
       },
       /**
-       * The item that is currently active and displaying a context menu.
+       * The interval that is currently active and displaying a context menu.
        *
        * @type {Object}
        */
-       activeItem: {
-         type: Object,
-         notify: true
-       },
-       /**
-        * The interval that is currently active and displaying a context menu.
-        *
-        * @type {Object}
-        */
-        activeItemInterval: {
-          type: Object,
-          notify: true
-        },
+      activeItemInterval: {
+        type: Object,
+        notify: true
+      },
       /**
        * The global application's app object.
        *
@@ -229,24 +220,20 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           border-right: none;
         }
 
-        #main-container .row-container .cell:not(.cell--left-header):not(.cell--top-header):hover {
+        #main-container .row-container .cell.cell--body:hover,
+        #main-container .item-row-container .cell.cell--body:hover {
+          z-index: 1;
           cursor: pointer;
-          box-shadow: 1px 1px 7px #999999;
+          box-shadow: 2px 2px 3px 0 #999999;
         }
 
         #main-container .row-container .cell.cell--today {
           color: white;
-          background-color: orange;
-        }
-
-        #main-container .row-container .cell.cell--weekend {
-          color: #ABABAB;
-          background-color: #EFEFEF;
+          background-color: var(--dark-primary-color);
         }
 
         #main-container .row-container .cell.cell--left-header {
           padding: 0 10px;
-          align-items: center;
           font-weight: bold;
           justify-content: space-between;
           color: var(--primary-color);
@@ -269,6 +256,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           display: flex;
           cursor: pointer;
           align-items: center;
+          transition: color 200ms linear;
         }
 
         #main-container .row-container .cell.cell--left-header .month-items-toggle:hover {
@@ -278,36 +266,32 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         #main-container .row-container .cell.cell--left-header .month-items-toggle casper-icon {
           width: 15px;
           height: 15px;
-          color: var(--primary-color);
         }
 
-        #main-container .row-container .cell.cell--left-header .month-items-toggle:hover casper-icon {
-          color: var(--dark-primary-color);
-        }
-
-        #main-container .row-container .cell.cell--left-header.cell--year-header {
+        #main-container .row-container .cell.cell--year-header {
           justify-content: space-around;
         }
 
-        #main-container .row-container .cell.cell--left-header.cell--year-header casper-icon {
+        #main-container .row-container .cell.cell--year-header casper-icon {
           width: 15px;
           height: 15px;
           cursor: pointer;
-          color: var(--primary-color);
+          transition: color 200ms linear;
+        }
+
+        #main-container .row-container .cell.cell--year-header casper-icon:hover {
+          color: var(--dark-primary-color);
         }
 
         #main-container .row-container .cell.cell--top-header {
-          display: flex;
           font-weight: bold;
-          align-items: center;
-          justify-content: center;
           color: var(--primary-color);
           background-color: var(--light-primary-color);
         }
 
-        #main-container .row-container .cell.cell--top-header.cell--weekend {
-          color: #ababab;
-          background-color: #efefef;
+        #main-container .row-container .cell.cell--weekend {
+          color: #ABABAB;
+          background-color: #EFEFEF;
         }
 
         #main-container .row-container .cell .holiday {
@@ -330,22 +314,18 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         }
 
         /* Item row styling */
-        .item-row-container {
+        #main-container .item-row-container {
           display: grid;
           background-color: white;
           grid-template-rows: 30px;
         }
 
-        .item-row-container:hover {
-          background-color: rgba(200, 200, 200, 0.1);
-        }
-
-        .item-row-container > div {
+        #main-container .item-row-container .cell {
           box-sizing: border-box;
-          border: 1px #F2F2F2 solid;
+          border: 1px #E4E4E4 solid;
         }
 
-        .item-row-container > div:first-of-type {
+        #main-container .item-row-container .cell.cell--left-header {
           flex-grow: 0;
           flex-shrink: 0;
           flex-basis: 10%;
@@ -356,9 +336,15 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           color: var(--primary-color);
         }
 
-        .item-row-container > div:not(:first-of-type) {
+        #main-container .item-row-container .cell.cell--body {
           flex: 1;
-          height: 30px;
+        }
+
+        #main-container .item-row-container .cell.cell--body:hover {
+          z-index: 1;
+          border: none;
+          cursor: pointer;
+          box-shadow: 2px 2px 3px 0 #999999;
         }
       </style>
 
@@ -402,7 +388,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
                 on-mouseup="__cellOnMouseUp"
                 on-mousedown="__cellOnMouseDown"
                 on-mouseenter="__cellOnMouseEnter"
-                class$="cell [[__isWeekend(monthDay.weekDay)]]">
+                class$="cell cell--body [[__isWeekend(monthDay.weekDay)]]">
                   <div class="cell-content">[[monthDay.index]]</div>
               </div>
             </template>
@@ -412,11 +398,13 @@ class CasperCalendar extends CasperCalendarItemsMixin(
 
       <template id="item-row-template">
         <div style$="[[itemRowContainerStyle]]" class="item-row-container">
-          <div>[[title]]</div>
+          <div class="cell cell--left-header">[[title]]</div>
           <template is="dom-repeat" items="[[intervals]]" as="interval">
             <div
+              class="cell cell--body"
               style$="[[interval.styles]]"
               tooltip="[[interval.tooltip]]"
+              tooltip-position="bottom"
               data-identifier$="[[interval.__identifier]]"
               on-click="__openContextMenu"></div>
           </template>
