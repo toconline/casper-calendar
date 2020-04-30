@@ -215,16 +215,22 @@ export const CasperCalendarItemsMixin = superClass => {
         .assignedElements()
         .find(assignedElement => assignedElement.nodeName && assignedElement.nodeName.toLowerCase() === 'casper-context-menu');
 
-      if (this.__contextMenu) {
-        this.__contextMenu.dynamicAlign = true;
-        this.__contextMenu.horizontalAlign = 'auto';
-        this.__contextMenu.addEventListener('opened-changed', event => {
-          if (!event.detail.value) {
-            this.activeItem = undefined;
-            this.activeItemInterval = undefined;
-          }
-        });
-      }
+      if (!this.__contextMenu) return;
+
+      this.__contextMenu.dynamicAlign = true;
+      this.__contextMenu.horizontalAlign = 'auto';
+      this.__contextMenu.addEventListener('opened-changed', event => {
+        if (!event.detail.value) {
+          this.activeItem = undefined;
+          this.activeItemInterval = undefined;
+        } else {
+          // Change the current active item using the __identifier property which consists of the item and interval index.
+          const [itemIndex, itemIntervalIndex] = this.__contextMenu.positionTarget.dataset.identifier.split('-');
+
+          this.activeItem = this.items[itemIndex];
+          this.activeItemInterval = this.items[itemIndex].intervals[itemIntervalIndex];
+        }
+      });
     }
 
     /**
@@ -233,18 +239,14 @@ export const CasperCalendarItemsMixin = superClass => {
      * @param {Object} event The event's object.
      */
     __openContextMenu (event) {
+      // Check if a context menu was slotted or if the cell clicked contains an actual item.
       if (!this.__contextMenu || !event.target.dataset.identifier) return;
 
-      // Change the current active item using the __identifier property which consists of the item and interval index.
-      const [itemIndex, itemIntervalIndex] = event.target.dataset.identifier.split('-');
-      this.activeItem = this.items[itemIndex];
-      this.activeItemInterval = this.items[itemIndex].intervals[itemIntervalIndex];
-
-      // Move the context menu to the correct item.
       this.__contextMenu.verticalOffset = event.target.getBoundingClientRect().height;
       this.__contextMenu.positionTarget = event.target;
-      this.__contextMenu.open();
-      this.app.tooltip.hide();
+
+      // This is used since the context menu might be closing at the time.
+      afterNextRender(this, () => this.__contextMenu.open());
     }
   }
 };
