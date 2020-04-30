@@ -420,11 +420,10 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           <template is="dom-repeat" items="[[intervals]]" as="interval">
             <div
               class="cell cell--body"
+              on-click="__openContextMenu"
               style$="[[interval.styles]]"
               tooltip="[[interval.tooltip]]"
-              tooltip-position="bottom"
-              data-identifier$="[[interval.__identifier]]"
-              on-click="__openContextMenu"></div>
+              data-identifier$="[[interval.__identifier]]"></div>
           </template>
         </div>
       </template>

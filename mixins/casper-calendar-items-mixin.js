@@ -233,7 +233,7 @@ export const CasperCalendarItemsMixin = superClass => {
      * @param {Object} event The event's object.
      */
     __openContextMenu (event) {
-      if (!this.__contextMenu) return;
+      if (!this.__contextMenu || !event.target.dataset.identifier) return;
 
       // Change the current active item using the __identifier property which consists of the item and interval index.
       const [itemIndex, itemIntervalIndex] = event.target.dataset.identifier.split('-');
