@@ -163,9 +163,11 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         observer: '__yearChanged'
       },
       /**
-       * This array contains the list of holidays.
+       * This array contains the list of enqueued tasks that will be run as soon as the component stops rendering.
+       *
+       * @type {Array}
        */
-      __holidays: {
+      __enqueuedTasks: {
         type: Array,
         value: []
       },
@@ -179,11 +181,20 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         value: []
       },
       /**
+       * This array contains the list of holidays.
+       *
+       * @type {Array}
+       */
+      __holidays: {
+        type: Array,
+        value: []
+      },
+      /**
        * This flag states if the component is still in the middle of its first paint.
        *
        * @type {Boolean}
        */
-      __isComponentInitializing: {
+      __isComponentRendering: {
         type: Boolean,
         value: true
       }
@@ -443,7 +454,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
 
         // Check if all the rows are already on the screen (the header one plus one for each month).
         if (rows.length !== 13) return;
-        this.__isComponentInitializing = false;
+        this.__isComponentRendering = false;
 
         // Apply the grid styling taking into account the number of columns.
         this.shadowRoot.querySelectorAll('.row-container').forEach(rowContainer => {
@@ -456,6 +467,9 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         this.__paintActiveDates();
         this.__paintHolidayCells();
         this.__highlightedMonthChanged();
+
+        // Iterate all the enqueued tasks, execute them and then remove every single one of them from the array.
+        this.__enqueuedTasks = this.__enqueuedTasks.filter(task => task.callback.call(this, ...task.parameters) && false);
       });
     });
   }
@@ -489,6 +503,10 @@ class CasperCalendar extends CasperCalendarItemsMixin(
   __yearChanged (year) {
     const months = [];
     this.__numberOfColumns = 31;
+    this.__expandedMonths = [];
+    this.__isComponentRendering = true;
+
+    if (year == 2021) this.collapseMonth(2);
 
     const yearFirstWeekDay = new Date(year, 0, 1).getDay();
 
@@ -671,12 +689,11 @@ class CasperCalendar extends CasperCalendarItemsMixin(
     this[propertyLockName] = false;
   }
 
-
   /**
    * This observer gets fired when the highlighted month property changes.
    */
   __highlightedMonthChanged () {
-    if (this.__isComponentInitializing) return;
+    if (this.__isComponentRendering) return;
 
     this.shadowRoot.querySelectorAll(`.row-container`).forEach(rowContainer => rowContainer.classList.remove('row-container--highlighted'));
 
@@ -684,6 +701,18 @@ class CasperCalendar extends CasperCalendarItemsMixin(
     if (![null, undefined].includes(this.highlightedMonth)) {
       this.shadowRoot.querySelector(`.row-container[data-month="${this.highlightedMonth}"]`).classList.add('row-container--highlighted');
     }
+  }
+
+  /**
+   * This method will return true if the callback can be executed immediately, otherwise it will enqueue it to be executed as soon as possible.
+   *
+   * @param {Function} callback The function will might be enqueued if it can't be executed immediately.
+   * @param {Array} parameters The function's parameters.
+   */
+  __executeTaskOrEnqueueIt (callback, ...parameters) {
+    if (!this.__isComponentRendering) return true;
+
+    this.__enqueuedTasks.push({ callback, parameters });
   }
 }
 

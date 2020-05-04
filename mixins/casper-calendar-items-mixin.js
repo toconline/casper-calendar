@@ -21,6 +21,9 @@ export const CasperCalendarItemsMixin = superClass => {
      * @param {Number} month The month that will be collapsed.
      */
     collapseMonth (month) {
+      // This means that either the calendar is currently rendering or the month is already collapsed.
+      if (!this.__executeTaskOrEnqueueIt(this.collapseMonth, month) || !this.__expandedMonths.includes(month)) return;
+
       this.__expandedMonths = this.__expandedMonths.filter(expandedMonth => expandedMonth !== month);
 
       const rowContainer = this.shadowRoot.querySelector(`.row-container[data-month="${month}"]`);
@@ -28,7 +31,7 @@ export const CasperCalendarItemsMixin = superClass => {
 
       while (rowContainer.nextElementSibling) {
         if (rowContainer.nextElementSibling.classList.contains('item-row-container')) {
-          rowContainer.parentElement.removeChild(rowContainer.nextElementSibling);
+          rowContainer.nextElementSibling.remove();
           continue;
         }
 
@@ -42,11 +45,14 @@ export const CasperCalendarItemsMixin = superClass => {
      * @param {Number} month The month that will be expanded.
      */
     expandMonth (month) {
+      // This means that either the calendar is currently rendering or the month is already expanded.
+      if (!this.__executeTaskOrEnqueueIt(this.expandMonth, month) || this.__expandedMonths.includes(month)) return;
+
       const monthDays = this.__getMonthDays(month);
       const monthItems = this.__getMonthItems(month);
 
-      // This means the month is already expanded or has no items.
-      if (this.__expandedMonths.includes(month) || monthItems.length === 0) return;
+      // This means the month has no items.
+      if (monthItems.length === 0) return;
       this.__expandedMonths.push(month);
 
       const documentFragment = new DocumentFragment();
@@ -115,7 +121,7 @@ export const CasperCalendarItemsMixin = superClass => {
      * This method gets invoked when the property items changes.
     */
     __itemsChanged () {
-      if (this.__isComponentInitializing) return;
+      if (this.__isComponentRendering) return;
 
       this.__expandedMonths = [];
       this.shadowRoot.querySelectorAll('.item-row-container, .month-items-toggle').forEach(element => element.remove());
