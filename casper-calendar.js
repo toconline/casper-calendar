@@ -215,7 +215,14 @@ class CasperCalendar extends CasperCalendarItemsMixin(
 
         #main-container .row-container {
           display: none;
+          padding: 0 2px;
+          border-radius: 5px;
           grid-template-rows: 40px;
+        }
+
+        #main-container .row-container.row-container--highlighted {
+          padding: 0;
+          border: 2px solid var(--dark-primary-color);
         }
 
         #main-container .row-container .cell {
@@ -229,11 +236,6 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           background-color: white;
           border: 1px #E4E4E4 solid;
           font-size: var(--casper-calendar--cell-font-size, 15px);
-        }
-
-        #main-container .row-container.row-container--highlighted {
-          border-radius: 5px;
-          border: 2px solid var(--dark-primary-color);
         }
 
         #main-container .row-container.row-container--highlighted .cell {
