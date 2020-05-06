@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@casper2020/casper-icons@^1.x":
+"@cloudware-casper/casper-icons@^1.x":
   version "1.20.1"
-  resolved "https://registry.yarnpkg.com/@casper2020/casper-icons/-/casper-icons-1.20.1.tgz#ac5fca1b8c2b7361a1c1b1ff6bf3e682bef384c5"
-  integrity sha512-4cokq8EZ87y7rAethmYTpA3/WBrhp5qBcE60VLt9ogp8HHa7Yd/J/9gzMIv1T0UHtxQ2r9yBqL29FL0hRWzLkQ==
+  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-icons/1.20.1/6ba9149bb421104c8c9d13189d147cb467fc50ffcf6769f0e456ce44634fcf17#77db54efca20b3d3f8b4035fab0c19a08888891d"
+  integrity sha512-ds4GQU4HS8K4np4BNrYZCcN5K+/lXiUzuyf0byFJELY4TXYpm7EhdEVE+E0TIq2llygrcCMIwgaWV/gWiAsSqg==
   dependencies:
     "@polymer/iron-icons" "^3.x"
     "@polymer/polymer" "^3.x"
@@ -160,9 +160,9 @@
     "@polymer/polymer" "^3.0.0"
 
 "@polymer/polymer@^3.0.0", "@polymer/polymer@^3.x":
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/@polymer/polymer/-/polymer-3.3.1.tgz#9ad48992d2a96775f80b0673f3a615d6df8a3dfc"
-  integrity sha512-8KaB48tzyMjdsHdxo5KvCAaqmTe7rYDzQAoj/pyEfq9Fp4YfUaS+/xqwYj0GbiDAUNzwkmEQ7dw9cgnRNdKO8A==
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/@polymer/polymer/-/polymer-3.4.1.tgz#333bef25711f8411bb5624fb3eba8212ef8bee96"
+  integrity sha512-KPWnhDZibtqKrUz7enIPOiO4ZQoJNOuLwqrhV2MXzIt3VVnUVJVG5ORz4Z2sgO+UZ+/UZnPD0jqY+jmw/+a9mQ==
   dependencies:
     "@webcomponents/shadycss" "^1.9.1"
 

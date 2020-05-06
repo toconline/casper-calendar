@@ -7,7 +7,7 @@ import { CasperCalendarMouseEventsMixin } from './mixins/casper-calendar-mouse-e
 import { CasperCalendarActiveDatesMixin } from './mixins/casper-calendar-active-dates-mixin.js';
 
 import moment from 'moment/src/moment.js';
-import '@casper2020/casper-icons/casper-icon.js';
+import '@cloudware-casper/casper-icons/casper-icon.js';
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
 import { afterNextRender } from '@polymer/polymer/lib/utils/render-status.js';
 
