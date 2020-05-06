@@ -1,6 +1,9 @@
 {
-  "name": "@casper2020/casper-calendar",
+  "name": "@cloudware-casper/casper-calendar",
   "version": "0.8.0",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "dependencies": {
     "@casper2020/casper-icons": "^1.x",
     "@polymer/paper-radio-button": "^3.x",
