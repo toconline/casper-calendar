@@ -260,7 +260,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
 
         #main-container .row-container .cell.cell--today span {
           color: white;
-          padding: 8px;
+          padding: 6px;
           border-radius: 50%;
           background-color: var(--primary-color);
         }
