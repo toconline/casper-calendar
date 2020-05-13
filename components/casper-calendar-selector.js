@@ -138,11 +138,11 @@ class CasperCalendarSelector extends PolymerElement {
         type: Array,
         value: () => [
           // Days options.
-          { type: CASPER_CALENDAR_MODE_TYPES.FULL_DAY, label: 'Dia Completo', mode: 'DAYS' },
-          { type: CASPER_CALENDAR_MODE_TYPES.ONLY_MORNING, label: 'Apenas Manhã', mode: 'DAYS' },
-          { type: CASPER_CALENDAR_MODE_TYPES.ONLY_AFTERNOON, label: 'Apenas Tarde', mode: 'DAYS' },
+          { type: CASPER_CALENDAR_MODE_TYPES.FULL_DAY, label: 'Dia completo', mode: 'DAYS' },
+          { type: CASPER_CALENDAR_MODE_TYPES.ONLY_MORNING, label: 'Apenas manhã', mode: 'DAYS' },
+          { type: CASPER_CALENDAR_MODE_TYPES.ONLY_AFTERNOON, label: 'Apenas tarde', mode: 'DAYS' },
           // Hours options.
-          { type: CASPER_CALENDAR_MODE_TYPES.FULL_HOURS, label: 'Dia Completo', mode: 'HOURS' },
+          { type: CASPER_CALENDAR_MODE_TYPES.FULL_HOURS, label: 'Dia completo', mode: 'HOURS' },
           { type: CASPER_CALENDAR_MODE_TYPES.HALF_HOURS, label: 'Meio-dia', mode: 'HOURS' },
           { type: CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS, label: 'Outro', mode: 'HOURS' },
         ]

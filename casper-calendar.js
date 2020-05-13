@@ -258,9 +258,11 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           box-shadow: 2px 2px 3px 0 #999999;
         }
 
-        #main-container .row-container .cell.cell--today {
+        #main-container .row-container .cell.cell--today span {
           color: white;
-          background-color: var(--dark-primary-color);
+          padding: 8px;
+          border-radius: 50%;
+          background-color: var(--primary-color);
         }
 
         #main-container .row-container .cell.cell--left-header {
@@ -420,7 +422,9 @@ class CasperCalendar extends CasperCalendarItemsMixin(
                 on-mousedown="__cellOnMouseDown"
                 on-mouseenter="__cellOnMouseEnter"
                 class$="cell cell--body [[__isWeekend(monthDay.weekDay)]]">
-                  <div class="cell-content">[[monthDay.index]]</div>
+                  <div class="cell-content">
+                    <span>[[monthDay.index]]</span>
+                  </div>
               </div>
             </template>
           </div>
