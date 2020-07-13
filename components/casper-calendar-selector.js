@@ -17,7 +17,7 @@ class CasperCalendarSelector extends PolymerElement {
       <style>
         #container {
           display: flex;
-          padding: 5px 10px;
+          padding: 0 10px;
           align-items: center;
         }
 
@@ -72,7 +72,7 @@ class CasperCalendarSelector extends PolymerElement {
 
         <paper-input
           no-label-float
-          value="{{__customHours}}"
+          value="{{customHours}}"
           label="Introduza o número de horas">
           <casper-icon icon="fa-light:info-circle" slot="suffix" tooltip="Este valor deverá ser numérico ser compreendido entre 0 e 24"></casper-icon>
         </paper-input>
@@ -129,6 +129,10 @@ class CasperCalendarSelector extends PolymerElement {
         type: Object,
         observer: '__overrideBackgroundColorsChanged'
       },
+      valid: {
+        type: Boolean,
+        notify: true
+      },
       /**
        * The different options that the user can select in both modes.
        *
@@ -173,8 +177,8 @@ class CasperCalendarSelector extends PolymerElement {
 
     this.__paperInput = this.shadowRoot.querySelector('paper-input');
     this.__paperInput.allowedPattern = /[\d\.]/;
-    this.__paperInput.addEventListener('blur', () => this.__validateCustomHoursInput());
-    this.__paperInput.addEventListener('value-changed', () => this.__validateCustomHoursInput());
+    this.__paperInput.addEventListener('blur', () => this.__customHoursChanged());
+    this.__paperInput.addEventListener('value-changed', () => this.__customHoursChanged());
     this.__paperInput.addEventListener('focus', () => { this.__isInputPristine = false; });
   }
 
@@ -222,6 +226,7 @@ class CasperCalendarSelector extends PolymerElement {
 
     // Disable the custom value input unless that option is currently selected.
     this.__paperInput.disabled = !isCustomHoursSelected;
+    this.valid = !isCustomHoursSelected || this.__validateCustomHours(this.customHours);
 
     this.backgroundColor = this.__backgroundColors[this.activeDateType];
 
@@ -234,32 +239,17 @@ class CasperCalendarSelector extends PolymerElement {
   /**
    * This method is used to validate the custom hours input's value.
    */
-  __validateCustomHoursInput () {
-    // Do not validate if the input was not focused yet.
-    if (this.__isInputPristine) return;
+  __customHoursChanged () {
+    // Do not validate if the input was not focused yet or if the custom hours option is not selected.
+    if (this.__isInputPristine || this.activeDateType !== CASPER_CALENDAR_MODE_TYPES.CUSTOM_HOURS) return;
 
     // Validate if the input contains a numeric value between 0 and 24.
-    if (!this.__validateCustomHours(this.__customHours)) {
-      this.__paperInput.invalid = true;
-      this.customHours = 0;
-      return;
-    }
+    const isCustomHoursValid = this.__validateCustomHours(this.customHours);
+    this.__paperInput.invalid = !isCustomHoursValid;
+    this.valid = isCustomHoursValid;
 
     // If we got here, it means the input passed all validations.
-    this.__paperInput.invalid = false;
-    this.customHours = parseFloat(this.__customHours);
-  }
-
-  /**
-   * Observer that gets fired when the custom hours property changes.
-   */
-  __customHoursChanged () {
-    if (!this.__validateCustomHours(this.customHours)) {
-      this.customHours = 0
-      this.__customHours = '';
-    } else {
-      this.__customHours = this.customHours;
-    }
+    if (isCustomHoursValid) this.customHours = parseFloat(this.customHours);
   }
 
   /**

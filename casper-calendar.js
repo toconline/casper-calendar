@@ -197,6 +197,10 @@ class CasperCalendar extends CasperCalendarItemsMixin(
       __isComponentRendering: {
         type: Boolean,
         value: true
+      },
+      __validSelector: {
+        type: Boolean,
+        observer: '__validSelectorChanged'
       }
     }
   }
@@ -204,13 +208,18 @@ class CasperCalendar extends CasperCalendarItemsMixin(
   static get template () {
     return html`
       <style>
+        :host {
+          display: block;
+          padding: 10px;
+          border-radius: 5px;
+          background-color: #E4E4E4;
+        }
+
         #main-container {
           display: flex;
           user-select: none;
-          border-radius: 5px;
-          padding: 0 10px 10px;
           flex-direction: column;
-          background-color: #E4E4E4;
+          transition: opacity 250ms linear;
         }
 
         #main-container .row-container {
@@ -381,16 +390,17 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         }
       </style>
 
-      <div id="main-container">
-        <casper-calendar-selector
-          id="selector"
-          mode="[[mode]]"
-          custom-hours="{{customHours}}"
-          active-date-type="{{activeDateType}}"
-          background-color="{{__intervalBackgroundColor}}"
-          override-background-colors="{{overrideBackgroundColors}}">
-        </casper-calendar-selector>
+      <casper-calendar-selector
+        id="selector"
+        mode="[[mode]]"
+        valid="{{__validSelector}}"
+        custom-hours="{{customHours}}"
+        active-date-type="{{activeDateType}}"
+        background-color="{{__intervalBackgroundColor}}"
+        override-background-colors="{{overrideBackgroundColors}}">
+      </casper-calendar-selector>
 
+      <div id="main-container">
         <div class="row-container">
           <!--Year selector-->
           <div class="cell cell--left-header cell--year-header">
@@ -453,6 +463,8 @@ class CasperCalendar extends CasperCalendarItemsMixin(
   ready () {
     super.ready();
 
+    this.__mainContainer = this.shadowRoot.querySelector('#main-container');
+
     this.__setupContextMenu();
     this.addEventListener('mousemove', event => this.app.tooltip.mouseMoveToolip(event));
     this.$.templateRepeat.addEventListener('dom-change', () => {
@@ -500,6 +512,30 @@ class CasperCalendar extends CasperCalendarItemsMixin(
     });
 
     this.__paintActiveDates();
+  }
+
+  /**
+   * This method locks the interface so that the user can't add / remove active dates.
+   */
+  lockInterface () {
+    this.__mainContainer.style.opacity = '0.5';
+    this.__mainContainer.style.pointerEvents = 'none';
+  }
+
+  /**
+   * This method unlocks the interface so that the user can add and remove active dates.
+   */
+  unlockInterface () {
+    this.__mainContainer.removeAttribute('style');
+  }
+
+  /**
+   * This method gets fired when the calendar selector becomes valid or invalid.
+   */
+  __validSelectorChanged () {
+    this.__validSelector
+      ? this.unlockInterface()
+      : this.lockInterface();
   }
 
   /**
@@ -723,4 +759,4 @@ class CasperCalendar extends CasperCalendarItemsMixin(
   }
 }
 
-customElements.define('casper-calendar', CasperCalendar);
+window.customElements.define('casper-calendar', CasperCalendar);
