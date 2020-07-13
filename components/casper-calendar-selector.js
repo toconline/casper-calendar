@@ -127,6 +127,11 @@ class CasperCalendarSelector extends PolymerElement {
         type: Object,
         observer: '__overrideBackgroundColorsChanged'
       },
+      /**
+       * This property states if the selector currently holds a valid value, which otherwise will lock the interface to prevent invalid dates.
+       *
+       * @type {Boolean}
+       */
       valid: {
         type: Boolean,
         notify: true
