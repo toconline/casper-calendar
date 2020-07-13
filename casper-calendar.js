@@ -453,7 +453,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
               on-click="__openContextMenu"
               style$="[[interval.styles]]"
               tooltip="[[interval.tooltip]]"
-              tooltip-position="top"
+              tooltip-position="right"
               data-identifier$="[[interval.__identifier]]"></div>
           </template>
         </div>

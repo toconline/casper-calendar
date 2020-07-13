@@ -223,8 +223,8 @@ export const CasperCalendarItemsMixin = superClass => {
 
       if (!this.__contextMenu) return;
 
-      this.__contextMenu.dynamicAlign = true;
-      this.__contextMenu.horizontalAlign = 'auto';
+      this.__contextMenu.verticalAlign = 'bottom';
+      this.__contextMenu.horizontalAlign = 'center';
       this.__contextMenu.addEventListener('opened-changed', event => {
         if (!event.detail.value) {
           this.activeItem = undefined;
