@@ -31,6 +31,7 @@ class CasperCalendarSelector extends PolymerElement {
 
         #container paper-radio-group paper-radio-button {
           display: none;
+
         }
 
         #container paper-radio-group paper-radio-button[visible] {
@@ -44,12 +45,9 @@ class CasperCalendarSelector extends PolymerElement {
         }
 
         #container paper-input {
-          width: 20%;
+          flex-grow: 1;
           display: none;
           margin-left: 10px;
-          --paper-input-container: {
-            padding: 0;
-          }
         }
 
         #container paper-input[visible] {
@@ -73,8 +71,8 @@ class CasperCalendarSelector extends PolymerElement {
         <paper-input
           no-label-float
           value="{{customHours}}"
-          label="Introduza o número de horas">
-          <casper-icon icon="fa-light:info-circle" slot="suffix" tooltip="Este valor deverá ser numérico ser compreendido entre 0 e 24"></casper-icon>
+          label="O valor das horas deverá ser numérico ser compreendido entre 0 e 24.">
+          <casper-icon slot="suffix" icon="fa-light:info-circle" tooltip="O valor das horas deverá ser numérico ser compreendido entre 0 e 24."></casper-icon>
         </paper-input>
       </div>
     `;
