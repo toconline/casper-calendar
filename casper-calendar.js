@@ -8,6 +8,8 @@ import { CasperCalendarActiveDatesMixin } from './mixins/casper-calendar-active-
 
 import moment from 'moment/src/moment.js';
 import '@cloudware-casper/casper-icons/casper-icon.js';
+import { timeOut } from '@polymer/polymer/lib/utils/async.js';
+import { Debouncer } from '@polymer/polymer/lib/utils/debounce.js';
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
 import { afterNextRender } from '@polymer/polymer/lib/utils/render-status.js';
 
@@ -677,23 +679,25 @@ class CasperCalendar extends CasperCalendarItemsMixin(
   /**
    * This method gets invoked when the property holidays changes.
    */
-  async __holidaysResourceChanged () {
-    if (!this.holidaysResource) return;
+  __holidaysResourceChanged () {
+    this.__holidaysResourceDebouncer = Debouncer.debounce(this.__holidaysResourceDebouncer, timeOut.after(100), async () => {
+      if (!this.holidaysResource) return;
 
-    try {
-      const holidaysResource = this.holidaysResource.includes('?')
-        ? `${this.holidaysResource}&filter[${this.holidaysResourceYearFilter}]=${this.year}`
-        : `${this.holidaysResource}?filter[${this.holidaysResourceYearFilter}]=${this.year}`;
+      try {
+        const holidaysResource = this.holidaysResource.includes('?')
+          ? `${this.holidaysResource}&filter[${this.holidaysResourceYearFilter}]=${this.year}`
+          : `${this.holidaysResource}?filter[${this.holidaysResourceYearFilter}]=${this.year}`;
 
-      const socketResponse = await this.app.socket.jget(holidaysResource);
+        const socketResponse = await this.app.socket.jget(holidaysResource);
 
-      this.__holidays = socketResponse.data;
-      this.__paintHolidayCells();
-    } catch (error) {
-      console.error(error);
+        this.__holidays = socketResponse.data;
+        this.__paintHolidayCells();
+      } catch (error) {
+        console.error(error);
 
-      this.app.openToast({ text: 'Ocorreu um erro ao obter os dados.', backgroundColor: 'red' });
-    }
+        this.app.openToast({ text: 'Ocorreu um erro ao obter os dados.', backgroundColor: 'red' });
+      }
+    });
   }
 
   /**
