@@ -198,6 +198,11 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         type: Boolean,
         value: true
       },
+      /**
+       * This flag states if the current calendar selector contains a valid option selected.
+       *
+       * @type {Boolean}
+       */
       __validSelector: {
         type: Boolean,
         observer: '__validSelectorChanged'
@@ -398,6 +403,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         mode="[[mode]]"
         valid="{{__validSelector}}"
         custom-hours="{{customHours}}"
+        active-dates="[[activeDates]]"
         active-date-type="{{activeDateType}}"
         background-color="{{__intervalBackgroundColor}}"
         override-background-colors="{{overrideBackgroundColors}}">

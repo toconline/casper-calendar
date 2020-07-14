@@ -44,6 +44,14 @@ class CasperCalendarSelector extends PolymerElement {
           border-radius: 20px;
         }
 
+        #container paper-radio-group paper-radio-button .radio-button-label span {
+          width: 70px;
+          text-align: end;
+          font-size: 0.85em;
+          font-weight: bold;
+          display: inline-block;
+        }
+
         #container paper-input {
           flex-grow: 1;
           display: none;
@@ -62,7 +70,7 @@ class CasperCalendarSelector extends PolymerElement {
           <template is="dom-repeat" items="[[__options]]">
             <paper-radio-button data-mode$="[[item.mode]]" name="[[item.type]]">
               <span class="radio-button-label" style="background-color: [[getBackgroundColorForType(item.type, __backgroundColors)]];">
-                [[item.label]]
+                [[item.label]]<span>[[__getActiveDateTypeCount(item.type, activeDates)]]</span>
               </span>
             </paper-radio-button>
           </template>
@@ -80,6 +88,12 @@ class CasperCalendarSelector extends PolymerElement {
 
   static get properties () {
     return {
+      /**
+       * The current active dates.
+       *
+       * @type {Array}
+       */
+      activeDates: Array,
       /**
        * The current date type that will saved in the new active dates.
        *
@@ -219,6 +233,19 @@ class CasperCalendarSelector extends PolymerElement {
         ? CASPER_CALENDAR_MODE_TYPES.FULL_DAY
         : CASPER_CALENDAR_MODE_TYPES.FULL_HOURS;
     });
+  }
+
+  /**
+   * This method displays the number of days for a specific date type.
+   *
+   * @param {String} dateType The date type we're counting the number of days from.
+   */
+  __getActiveDateTypeCount (dateType) {
+    const numberOfDays = this.activeDates
+      .filter(activeDate => activeDate.meta.type === dateType)
+      .reduce((numberOfDays, activeDate) => numberOfDays + activeDate.days.length, 0);
+
+    return `${numberOfDays} dia(s)`;
   }
 
   /**
