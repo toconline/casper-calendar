@@ -1,6 +1,6 @@
 {
   "name": "@cloudware-casper/casper-calendar",
-  "version": "0.10.0",
+  "version": "1.0.0",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
