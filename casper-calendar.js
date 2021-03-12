@@ -85,6 +85,15 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         value: false
       },
       /**
+       * Set this flag to hide the selector
+       *
+       * @type {Boolean}
+       */
+      hideSelector: {
+        type: Boolean,
+        value: false
+      },
+      /**
        * This property allows the developer to highlight a specific month for visibility purposes.
        *
        * @type {Number}
@@ -408,7 +417,8 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         active-dates="[[activeDates]]"
         active-date-type="{{activeDateType}}"
         background-color="{{__intervalBackgroundColor}}"
-        override-background-colors="{{overrideBackgroundColors}}">
+        override-background-colors="{{overrideBackgroundColors}}"
+        hidden$="[[hideSelector]]">
       </casper-calendar-selector>
 
       <div id="main-container">
