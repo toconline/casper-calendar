@@ -30,6 +30,7 @@ export const CasperCalendarMouseEventsMixin = superClass => {
         // The user clicked on a day that wasn't previously active so we'll try to add it to the list.
         this.addActiveDate(newActiveDate);
         eventTarget.setAttribute('active', '');
+        this.__openContextMenu(event);
       }
 
       this.__activeDateEnd = undefined;
