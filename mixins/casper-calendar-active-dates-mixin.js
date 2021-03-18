@@ -8,7 +8,16 @@ export const CasperCalendarActiveDatesMixin = superClass => {
      * @param {Object} newActiveDate The new date we'll try to add.
      */
     addActiveDate (newActiveDate) {
-      const mergedActiveDates = this.__mergeActiveDates(newActiveDate);
+      let mergedActiveDates;
+      
+      // If the calendar is of the type Holiday, then we only want the user to select one day at a time
+      if (this.isHoliday) {
+        newActiveDate.meta = { type: this.activeDateType };
+        newActiveDate.days = this.__getDaysBetweenDates(newActiveDate.start, newActiveDate.end);
+        mergedActiveDates = [newActiveDate];
+      } else {
+        mergedActiveDates = this.__mergeActiveDates(newActiveDate);
+      }
 
       if (this.maximumNumberActiveDates && mergedActiveDates.length > this.maximumNumberActiveDates) {
         // Remove the first active date to add the new one.

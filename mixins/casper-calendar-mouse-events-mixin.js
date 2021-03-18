@@ -3,6 +3,40 @@ import moment from 'moment/src/moment.js';
 export const CasperCalendarMouseEventsMixin = superClass => {
   return class extends superClass {
 
+    __cellOnClick (event) {
+      const eventTarget = event.composedPath().find(element => element.classList.contains('cell'));
+
+      // This means it's an empty day used as padding or the user has entered the limbo state where he was selecting a date but then left the component.
+      if (!Object.keys(eventTarget.dataset).includes('day') || this.__isUserSelectingRange) return;
+
+      // Begin the date selection.
+      this.__activeDateStart = moment(new Date(
+        this.year,
+        eventTarget.dataset.month,
+        eventTarget.dataset.day
+      ));
+
+      this.__activeDateEnd = this.__activeDateStart;
+
+      const newActiveDate = { start: this.__activeDateStart, end: this.__activeDateEnd };
+
+      // This means it was a click, so both the start and end date are equal.
+      const activeDateIndex = this.__activeDateIndexOfDay(newActiveDate.start);
+
+      if (activeDateIndex !== -1) {
+        // The user clicked on an active date so we'll remove it from the list.
+        this.removeActiveDate(activeDateIndex);
+      } else {
+        // The user clicked on a day that wasn't previously active so we'll try to add it to the list.
+        this.addActiveDate(newActiveDate);
+        eventTarget.setAttribute('active', '');
+      }
+
+      this.__activeDateEnd = undefined;
+      this.__activeDateStart = undefined;
+    }
+
+
     /**
      * This method gets invoked when the user presses the mouse key down on top of a cell.
      *

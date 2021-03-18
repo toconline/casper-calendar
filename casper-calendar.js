@@ -217,6 +217,10 @@ class CasperCalendar extends CasperCalendarItemsMixin(
       __validSelector: {
         type: Boolean,
         observer: '__validSelectorChanged'
+      },
+      isHoliday: {
+        type: Boolean,
+        value: false
       }
     }
   }
@@ -446,17 +450,30 @@ class CasperCalendar extends CasperCalendarItemsMixin(
             <div class="cell cell--left-header">[[month.name]]</div>
 
             <template is="dom-repeat" items="[[__getMonthDays(index)]]" as="monthDay">
-              <div
-                data-month$="[[month.index]]"
-                data-day$="[[monthDay.index]]"
-                on-mouseup="__cellOnMouseUp"
-                on-mousedown="__cellOnMouseDown"
-                on-mouseenter="__cellOnMouseEnter"
-                class$="cell cell--body [[__isWeekend(monthDay.weekDay)]]">
+              <template is="dom-if" if="[[isHoliday]]">
+                <div
+                  data-month$="[[month.index]]"
+                  data-day$="[[monthDay.index]]"
+                  on-click="__cellOnClick"
+                  class$="cell cell--body [[__isWeekend(monthDay.weekDay)]]">
+                    <div class="cell-content">
+                      <span>[[monthDay.index]]</span>
+                    </div>
+                </div>
+              </template>
+              <template is="dom-if" if="[[!isHoliday]]">
+                <div
+                  data-month$="[[month.index]]"
+                  data-day$="[[monthDay.index]]"
+                  on-mouseup="__cellOnMouseUp"
+                  on-mousedown="__cellOnMouseDown"
+                  on-mouseenter="__cellOnMouseEnter"
+                  class$="cell cell--body [[__isWeekend(monthDay.weekDay)]]">
                   <div class="cell-content">
                     <span>[[monthDay.index]]</span>
                   </div>
-              </div>
+                </div>
+              </template>
             </template>
           </div>
         </template>
@@ -512,6 +529,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         this.__enqueuedTasks = this.__enqueuedTasks.filter(task => task.callback.call(this, ...task.parameters) && false);
       });
     });
+
   }
 
   /**
