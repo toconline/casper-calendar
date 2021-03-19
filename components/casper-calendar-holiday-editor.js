@@ -13,13 +13,17 @@ class CasperCalendarHolidayEditor extends mixinBehaviors(CasperOverlayBehavior, 
         type: String,
         value: ''
       },
-      editorMode: {
+      _editorText: {
         type: String,
         value: 'Criar'
       },
-      isCreate: {
+      isEdit: {
         type: String,
-        value: true
+        value: false
+      },
+      date: {
+        type: Object,
+        value: {}
       }
     };
   }
@@ -125,13 +129,13 @@ class CasperCalendarHolidayEditor extends mixinBehaviors(CasperOverlayBehavior, 
       <paper-listbox>
         <div class="header">
           <div class="header-content">
-            <span>[[editorMode]] Feriado</span>
+            <span>[[_editorText]] Feriado</span>
             <casper-icon class="close" icon="fa-light:times-circle" on-click="_closeEditor"></casper-icon>
           </div>
         </div>
         <paper-input id="descriptionInput" width="300px" label="Descrição" value="{{description}}"></paper-input>
         <div class="buttons-container">
-          <template is="dom-if" if="[[!isCreate]]">
+          <template is="dom-if" if="[[isEdit]]">
             <casper-icon icon="fa-light:trash-alt" class="button delete-button" on-click="_o"></casper-icon>
           </template>
           <casper-icon icon="fa-light:check" class="button accept-button" on-click="_acceptHoliday"></casper-icon>
@@ -147,18 +151,18 @@ class CasperCalendarHolidayEditor extends mixinBehaviors(CasperOverlayBehavior, 
   ready () {
     super.ready();
 
-    if (this.editorMode === 'Criar') {
-      this.isCreate = true;
-    } else if (this.editorMode === 'Editar') {
-      this.isCreate = false;
-    }
-
     this.addEventListener('opened-changed', (event) => {
       if (event && event.detail && event.detail.value) {
         afterNextRender(this, () => {
           this.$.descriptionInput.focus();
         });
-      } 
+      }
+      if (this.isEdit) {
+        this._editorText = 'Editar';
+      } else {
+        this._editorText = 'Criar';
+        this.description = '';
+      }
     });
   }
 
@@ -167,19 +171,20 @@ class CasperCalendarHolidayEditor extends mixinBehaviors(CasperOverlayBehavior, 
   }
 
   _acceptHoliday () {
-    this.dispatchEvent(new CustomEvent('casper-holiday-editor-accept-description', {
+    this.date.description = this.description;
+
+    this.dispatchEvent(new CustomEvent('casper-holiday-editor-create', {
       bubbles: true,
       composed: true,
-      detail: { description: this.description }
+      detail: { newDate: this.date }
     }));
 
     this.close();
   }
 
 }
-  
+
 customElements.define(CasperCalendarHolidayEditor.is, CasperCalendarHolidayEditor);
 
 
 // officeBranchesWiz.$.casperCalendar.activeDates
-  

@@ -1,5 +1,6 @@
 
 import './components/casper-calendar-selector.js';
+import './components/casper-calendar-holiday-editor.js';
 import { CASPER_CALENDAR_MODES } from './casper-calendar-constants.js';
 import { CasperCalendarItemsMixin } from './mixins/casper-calendar-items-mixin.js';
 import { CasperCalendarPaintMixin } from './mixins/casper-calendar-paint-mixin.js';
@@ -218,6 +219,11 @@ class CasperCalendar extends CasperCalendarItemsMixin(
         type: Boolean,
         observer: '__validSelectorChanged'
       },
+      /**
+       * This flag states if the calendar is in holiday mode
+       *
+       * @type {Boolean}
+       */
       isHoliday: {
         type: Boolean,
         value: false
@@ -377,6 +383,25 @@ class CasperCalendar extends CasperCalendarItemsMixin(
           background-color: #FF5000;
         }
 
+        #main-container .row-container .cell .custom-holiday {
+          right: 0;
+          bottom: 0;
+          position: absolute;
+          width: 13px;
+          height: 13px;
+          padding-top: 1px;
+          padding-left: 1px;
+          font-size: 8px;
+          line-height: 13px;
+          color: white;
+          display: flex;
+          opacity: 0.75;
+          box-sizing: border-box;
+          border-radius: 12px 3px 3px 3px;
+          justify-content: center;
+          background-color: var(--dark-primary-color);
+        }
+
         /* Item row styling */
         #main-container .item-row-container {
           display: grid;
@@ -450,30 +475,18 @@ class CasperCalendar extends CasperCalendarItemsMixin(
             <div class="cell cell--left-header">[[month.name]]</div>
 
             <template is="dom-repeat" items="[[__getMonthDays(index)]]" as="monthDay">
-              <template is="dom-if" if="[[isHoliday]]">
-                <div
-                  data-month$="[[month.index]]"
-                  data-day$="[[monthDay.index]]"
-                  on-click="__cellOnClick"
-                  class$="cell cell--body [[__isWeekend(monthDay.weekDay)]]">
-                    <div class="cell-content">
-                      <span>[[monthDay.index]]</span>
-                    </div>
+              <div
+                data-month$="[[month.index]]"
+                data-day$="[[monthDay.index]]"
+                on-mouseup="__cellOnMouseUp"
+                on-mousedown="__cellOnMouseDown"
+                on-mouseenter="__cellOnMouseEnter"
+                on-click="__cellOnClick"
+                class$="cell cell--body [[__isWeekend(monthDay.weekDay)]]">
+                <div class="cell-content">
+                  <span>[[monthDay.index]]</span>
                 </div>
-              </template>
-              <template is="dom-if" if="[[!isHoliday]]">
-                <div
-                  data-month$="[[month.index]]"
-                  data-day$="[[monthDay.index]]"
-                  on-mouseup="__cellOnMouseUp"
-                  on-mousedown="__cellOnMouseDown"
-                  on-mouseenter="__cellOnMouseEnter"
-                  class$="cell cell--body [[__isWeekend(monthDay.weekDay)]]">
-                  <div class="cell-content">
-                    <span>[[monthDay.index]]</span>
-                  </div>
-                </div>
-              </template>
+              </div>
             </template>
           </div>
         </template>
@@ -495,6 +508,8 @@ class CasperCalendar extends CasperCalendarItemsMixin(
       </template>
 
       <slot name="context-menu"></slot>
+
+      <casper-calendar-holiday-editor id="cche"></casper-calendar-holiday-editor>
     `;
   }
 
@@ -530,6 +545,13 @@ class CasperCalendar extends CasperCalendarItemsMixin(
       });
     });
 
+    // When on holiday mode, setup holiday stuff
+    if (this.isHoliday) {
+      this._holidayEditor = this.$.cche;
+      this._holidayEditor.horizontalAlign = 'auto';
+
+      this.addEventListener('casper-holiday-editor-create', event => this.__createHoliday(event));
+    }
   }
 
   /**

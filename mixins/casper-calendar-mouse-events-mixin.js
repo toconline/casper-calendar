@@ -4,10 +4,23 @@ export const CasperCalendarMouseEventsMixin = superClass => {
   return class extends superClass {
 
     __cellOnClick (event) {
+      if (!this.isHoliday) return;
+
       const eventTarget = event.composedPath().find(element => element.classList.contains('cell'));
 
       // This means it's an empty day used as padding or the user has entered the limbo state where he was selecting a date but then left the component.
       if (!Object.keys(eventTarget.dataset).includes('day') || this.__isUserSelectingRange) return;
+
+
+      let customDescription = '';
+      for (const node of eventTarget.childNodes) {
+        if (node.className === 'custom-holiday') {
+          if (node.tooltip) {
+            customDescription = node.tooltip;
+          }
+        }
+      }
+
 
       // Begin the date selection.
       this.__activeDateStart = moment(new Date(
@@ -28,9 +41,9 @@ export const CasperCalendarMouseEventsMixin = superClass => {
         this.removeActiveDate(activeDateIndex);
       } else {
         // The user clicked on a day that wasn't previously active so we'll try to add it to the list.
-        this.addActiveDate(newActiveDate);
         eventTarget.setAttribute('active', '');
-        this.__openContextMenu(event);
+        this.__selectedCell(eventTarget);
+        this.__openHolidayEditor(event, newActiveDate, customDescription);
       }
 
       this.__activeDateEnd = undefined;
@@ -44,6 +57,8 @@ export const CasperCalendarMouseEventsMixin = superClass => {
      * @param {Object} event The event's object.
      */
     __cellOnMouseDown (event) {
+      if (this.isHoliday) return;
+
       const eventTarget = event.composedPath().find(element => element.classList.contains('cell'));
 
       // This means it's an empty day used as padding or the user has entered the limbo state where he was selecting a date but then left the component.
@@ -66,6 +81,8 @@ export const CasperCalendarMouseEventsMixin = superClass => {
      * @param {Object} event The event's object.
      */
     __cellOnMouseEnter (event) {
+      if (this.isHoliday) return;
+
       const eventTarget = event.composedPath().find(element => element.classList.contains('cell'));
 
       if (!Object.keys(eventTarget.dataset).includes('day') || !this.__isUserHoldingMouseButton) return;
@@ -89,6 +106,8 @@ export const CasperCalendarMouseEventsMixin = superClass => {
      * @param {Object} event The event's object.
      */
     __cellOnMouseUp (event) {
+      if (this.isHoliday) return;
+
       const eventTarget = event.composedPath().find(element => element.classList.contains('cell'));
 
       // This means, it's an empty day used as padding.

@@ -253,5 +253,29 @@ export const CasperCalendarItemsMixin = superClass => {
       // This is used since the context menu might be closing at the time.
       afterNextRender(this, () => this.__contextMenu.open());
     }
+
+    /**
+     * Used for opening the holiday editor when user clicks on a day
+     *
+     * @param {Object} event The event's object.
+     */
+     __openHolidayEditor (event, newHoliday, description) {
+      // Check if a context menu was slotted or if the cell clicked contains an actual item.
+      if (!this._holidayEditor || !this.isHoliday) return;
+
+      this._holidayEditor.verticalOffset = event.target.getBoundingClientRect().height;
+      this._holidayEditor.positionTarget = event.target;
+      this._holidayEditor.date = newHoliday;
+
+      if (description) {
+        this._holidayEditor.description = description;
+        this._holidayEditor.isEdit = true;
+      } else {
+        this._holidayEditor.isEdit = false;
+      }
+
+      // This is used since the context menu might be closing at the time.
+      afterNextRender(this, () => this._holidayEditor.open());
+    }
   }
 };

@@ -53,6 +53,32 @@ export const CasperCalendarPaintMixin = superClass => {
     }
 
     /**
+     * This method paints the cell that was clicked by the user in holiday mode
+     */
+    __selectedCell (cell) {
+      this.__unselectCell(this.__oldSelectedCell)
+
+      if (cell) {
+        const backgroundColor = 'var(--light-primary-color)';
+        const color = this.__getContrastingTextColorForBackground(backgroundColor);
+
+        cell.style.color = color;
+        cell.style.backgroundColor = backgroundColor;
+        this.__oldSelectedCell = cell;
+      }
+    }
+
+    /**
+     * This method unpaints the cell that was previously clicked by the user in holiday mode
+     */
+    __unselectCell (cell) {
+      if (cell) {
+        cell.style.color = '';
+        cell.style.backgroundColor = '';
+      }
+    }
+
+    /**
      * This method paints the cell that represents the present day.
      */
     __paintTodayCell () {
@@ -75,7 +101,12 @@ export const CasperCalendarPaintMixin = superClass => {
 
         if (holidayCell) {
           const holidaySpanElement = document.createElement('span');
-          holidaySpanElement.className = 'holiday';
+
+          if (holiday.is_custom) {
+            holidaySpanElement.className = 'custom-holiday';
+          } else {
+            holidaySpanElement.className = 'holiday';
+          }
           holidaySpanElement.innerText = 'F';
           holidaySpanElement.tooltip = holiday.description;
 
