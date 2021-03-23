@@ -84,10 +84,5 @@ export const CasperCalendarActiveDatesMixin = superClass => {
         days: this.__getDaysBetweenDates(activeDate.start, activeDate.end),
       }));
     }
-
-    __createHoliday (event) {
-      const newActiveDate = event.detail.newDate;
-      this.addActiveDate(newActiveDate);
-    }
   }
 };

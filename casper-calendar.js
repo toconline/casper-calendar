@@ -1,6 +1,5 @@
 
 import './components/casper-calendar-selector.js';
-import './components/casper-calendar-holiday-editor.js';
 import { CASPER_CALENDAR_MODES } from './casper-calendar-constants.js';
 import { CasperCalendarItemsMixin } from './mixins/casper-calendar-items-mixin.js';
 import { CasperCalendarPaintMixin } from './mixins/casper-calendar-paint-mixin.js';
@@ -9,6 +8,7 @@ import { CasperCalendarActiveDatesMixin } from './mixins/casper-calendar-active-
 
 import moment from 'moment/src/moment.js';
 import '@cloudware-casper/casper-icons/casper-icon.js';
+import '@cloudware-casper/casper-tooltip-dialog/casper-popover-dialog.js';
 import { timeOut } from '@polymer/polymer/lib/utils/async.js';
 import { Debouncer } from '@polymer/polymer/lib/utils/debounce.js';
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
@@ -509,7 +509,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
 
       <slot name="context-menu"></slot>
 
-      <casper-calendar-holiday-editor id="cche"></casper-calendar-holiday-editor>
+      <casper-popover-dialog id="popoverDialog"></casper-popup-input-dialog>
     `;
   }
 
@@ -547,10 +547,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
 
     // When on holiday mode, setup holiday stuff
     if (this.isHoliday) {
-      this._holidayEditor = this.$.cche;
-      this._holidayEditor.horizontalAlign = 'auto';
-
-      this.addEventListener('casper-holiday-editor-create', event => this.__createHoliday(event));
+      this._popoverDialog = this.$.popoverDialog;
     }
   }
 

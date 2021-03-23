@@ -55,16 +55,13 @@ export const CasperCalendarPaintMixin = superClass => {
     /**
      * This method paints the cell that was clicked by the user in holiday mode
      */
-    __selectedCell (cell) {
-      this.__unselectCell(this.__oldSelectedCell)
-
+    __selectCell (cell) {
       if (cell) {
         const backgroundColor = 'var(--light-primary-color)';
         const color = this.__getContrastingTextColorForBackground(backgroundColor);
 
         cell.style.color = color;
         cell.style.backgroundColor = backgroundColor;
-        this.__oldSelectedCell = cell;
       }
     }
 

@@ -3,7 +3,7 @@ import moment from 'moment/src/moment.js';
 export const CasperCalendarMouseEventsMixin = superClass => {
   return class extends superClass {
 
-    __cellOnClick (event) {
+    async __cellOnClick (event) {
       if (!this.isHoliday) return;
 
       const eventTarget = event.composedPath().find(element => element.classList.contains('cell'));
@@ -18,9 +18,10 @@ export const CasperCalendarMouseEventsMixin = superClass => {
           if (node.tooltip) {
             customDescription = node.tooltip;
           }
+        } else if (node.className === 'holiday') {
+          // TODO: maybe we should do something here
         }
       }
-
 
       // Begin the date selection.
       this.__activeDateStart = moment(new Date(
@@ -40,10 +41,18 @@ export const CasperCalendarMouseEventsMixin = superClass => {
         // The user clicked on an active date so we'll remove it from the list.
         this.removeActiveDate(activeDateIndex);
       } else {
-        // The user clicked on a day that wasn't previously active so we'll try to add it to the list.
-        eventTarget.setAttribute('active', '');
-        this.__selectedCell(eventTarget);
-        this.__openHolidayEditor(event, newActiveDate, customDescription);
+        try {
+          this.__selectCell(eventTarget);
+          const popoverResponse = await this.__openHolidayPopover(eventTarget, newActiveDate, customDescription);
+          if (popoverResponse.detail.accept) {
+            // Shoot event to create holiday
+          } else if (popoverResponse.detail.delete) {
+            // Shoot event to delete holiday
+          }
+        } catch (e) {
+          this.__unselectCell(eventTarget);
+        }
+
       }
 
       this.__activeDateEnd = undefined;

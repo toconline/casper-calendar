@@ -9,6 +9,21 @@
   dependencies:
     "@polymer/polymer" "^3.x"
 
+"@cloudware-casper/casper-overlay-behavior@^1.x":
+  version "1.0.0"
+  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-overlay-behavior/1.0.0/00e8d24f2599c0f15ae4500d03fc71fed252251f843d35ae9ee3a63995d01fad#af4a3084958aa01d7eb9623d4dc6121893cdc235"
+  integrity sha512-S7/iafhTc9ukWDOVNFMHWu9cIN78mbm/VP1JmKdS+2I7rXiKxep6W8DNfr7SsU7ix0qT38/uY8hSaqh/11gOLg==
+  dependencies:
+    "@polymer/iron-overlay-behavior" "^3.x"
+
+"@cloudware-casper/casper-tooltip-dialog@^1.4.0":
+  version "1.4.0"
+  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-tooltip-dialog/1.4.0/94952c64f652b459ed6a3515787818995f3194deabdb3bf8fbe26d701a9149d5#c7542d17b906967ed2a3220d2b1b7f569c78e017"
+  integrity sha512-f1e7rK6sSIiqxkzLg6w6JbHQFB+1lpF7WrFLSphXYrprnKh8Zmq8pBTa5eioo1evw/vlYJ7/kHfLpJ7NixeS0w==
+  dependencies:
+    "@cloudware-casper/casper-overlay-behavior" "^1.x"
+    "@polymer/polymer" "^3.0.0"
+
 "@polymer/font-roboto@^3.0.1":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@polymer/font-roboto/-/font-roboto-3.0.2.tgz#80cdaa7225db2359130dfb2c6d9a3be1820020c3"
@@ -36,6 +51,13 @@
   dependencies:
     "@polymer/iron-form-element-behavior" "^3.0.0-pre.26"
     "@polymer/iron-validatable-behavior" "^3.0.0-pre.26"
+    "@polymer/polymer" "^3.0.0"
+
+"@polymer/iron-fit-behavior@^3.0.0-pre.26":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@polymer/iron-fit-behavior/-/iron-fit-behavior-3.1.0.tgz#8197a61e0ce2234e9bf8fbd7a1ae53d1a06026b0"
+  integrity sha512-ABcgIYqrjhmUT8tiuolqeGttF/8pd3sEymUDrO1vXbZu4FWIvoLNndrMDFvs++AGd12Mjf5pYy84NJc6dB8Vig==
+  dependencies:
     "@polymer/polymer" "^3.0.0"
 
 "@polymer/iron-flex-layout@^3.0.0-pre.26":
@@ -66,6 +88,23 @@
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@polymer/iron-meta/-/iron-meta-3.0.1.tgz#7f140628d127b0a284f882f1bb323a261bc125f5"
   integrity sha512-pWguPugiLYmWFV9UWxLWzZ6gm4wBwQdDy4VULKwdHCqR7OP7u98h+XDdGZsSlDPv6qoryV/e3tGHlTIT0mbzJA==
+  dependencies:
+    "@polymer/polymer" "^3.0.0"
+
+"@polymer/iron-overlay-behavior@^3.x":
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/@polymer/iron-overlay-behavior/-/iron-overlay-behavior-3.0.3.tgz#29c198e19e05bb2bcf7d86d3c11848cb93301d00"
+  integrity sha512-Q/Fp0+uOQQ145ebZ7T8Cxl4m1tUKYjyymkjcL2rXUm+aDQGb1wA1M1LYxUF5YBqd+9lipE0PTIiYwA2ZL/sznA==
+  dependencies:
+    "@polymer/iron-a11y-keys-behavior" "^3.0.0-pre.26"
+    "@polymer/iron-fit-behavior" "^3.0.0-pre.26"
+    "@polymer/iron-resizable-behavior" "^3.0.0-pre.26"
+    "@polymer/polymer" "^3.0.0"
+
+"@polymer/iron-resizable-behavior@^3.0.0-pre.26":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@polymer/iron-resizable-behavior/-/iron-resizable-behavior-3.0.1.tgz#e284348ed7c1c7e263f7039297532fa954025ea2"
+  integrity sha512-FyHxRxFspVoRaeZSWpT3y0C9awomb4tXXolIJcZ7RvXhMP632V5lez+ch5G5SwK0LpnAPkg35eB0LPMFv+YMMQ==
   dependencies:
     "@polymer/polymer" "^3.0.0"
 

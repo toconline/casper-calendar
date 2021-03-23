@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@cloudware-casper/casper-icons": "^2.x",
+    "@cloudware-casper/casper-tooltip-dialog": "^1.4.0",
     "@polymer/paper-radio-button": "^3.x",
     "@polymer/paper-radio-group": "^3.x",
     "@polymer/polymer": "^3.x"

@@ -255,27 +255,27 @@ export const CasperCalendarItemsMixin = superClass => {
     }
 
     /**
-     * Used for opening the holiday editor when user clicks on a day
-     *
-     * @param {Object} event The event's object.
+     * Used for opening the holiday popover when user clicks on a day
      */
-     __openHolidayEditor (event, newHoliday, description) {
+     __openHolidayPopover (target, selectedDay, description) {
       // Check if a context menu was slotted or if the cell clicked contains an actual item.
-      if (!this._holidayEditor || !this.isHoliday) return;
+      if (!this._popoverDialog || !this.isHoliday || !target) return;
 
-      this._holidayEditor.verticalOffset = event.target.getBoundingClientRect().height;
-      this._holidayEditor.positionTarget = event.target;
-      this._holidayEditor.date = newHoliday;
+      this._popoverDialog.responseObject = selectedDay;
 
       if (description) {
-        this._holidayEditor.description = description;
-        this._holidayEditor.isEdit = true;
+        this._popoverDialog.headerText = 'Editar feriado';
+        this._popoverDialog.inputLabel = 'Descrição';
+        this._popoverDialog.inputValue = description;
+        this._popoverDialog.hideDelete = false;
       } else {
-        this._holidayEditor.isEdit = false;
+        this._popoverDialog.headerText = 'Criar feriado';
+        this._popoverDialog.inputLabel = 'Descrição';
+        this._popoverDialog.inputValue = '';
+        this._popoverDialog.hideDelete = true;
       }
 
-      // This is used since the context menu might be closing at the time.
-      afterNextRender(this, () => this._holidayEditor.open());
+      return this._popoverDialog.connection(target);
     }
   }
 };
