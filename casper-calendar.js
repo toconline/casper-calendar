@@ -515,6 +515,7 @@ class CasperCalendar extends CasperCalendarItemsMixin(
 
   ready () {
     super.ready();
+    this.app = window.app;
 
     this.__mainContainer = this.shadowRoot.querySelector('#main-container');
 
@@ -721,6 +722,13 @@ class CasperCalendar extends CasperCalendarItemsMixin(
     }, startDate, endDate);
 
     return activeDateDays;
+  }
+
+  /**
+   * This method is used to refresh the holidays.
+   */
+  refreshHolidays () {
+    this.__holidaysResourceChanged();
   }
 
   /**

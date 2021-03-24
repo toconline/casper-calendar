@@ -92,6 +92,7 @@ export const CasperCalendarPaintMixin = superClass => {
      */
     __paintHolidayCells () {
       this.shadowRoot.querySelectorAll('span.holiday').forEach(holidaySpan => holidaySpan.remove());
+      this.shadowRoot.querySelectorAll('span.custom-holiday').forEach(holidaySpan => holidaySpan.remove());
 
       this.__holidays.forEach(holiday => {
         const holidayCell = this.__findCellByMonthAndDay(holiday.month - 1, holiday.day);
@@ -101,6 +102,7 @@ export const CasperCalendarPaintMixin = superClass => {
 
           if (holiday.is_custom) {
             holidaySpanElement.className = 'custom-holiday';
+            holidayCell.dataset.id = holiday.true_id;
           } else {
             holidaySpanElement.className = 'holiday';
           }

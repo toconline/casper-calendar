@@ -13,11 +13,13 @@ export const CasperCalendarMouseEventsMixin = superClass => {
 
 
       let customDescription = '';
+      let customHolidayId;
       for (const node of eventTarget.childNodes) {
         if (node.className === 'custom-holiday') {
           if (node.tooltip) {
             customDescription = node.tooltip;
           }
+          customHolidayId = eventTarget.dataset.id;
         } else if (node.className === 'holiday') {
           // TODO: maybe we should do something here
         }
@@ -44,15 +46,33 @@ export const CasperCalendarMouseEventsMixin = superClass => {
         try {
           this.__selectCell(eventTarget);
           const popoverResponse = await this.__openHolidayPopover(eventTarget, newActiveDate, customDescription);
+
+          let holidayEventName;
           if (popoverResponse.detail.accept) {
-            // Shoot event to create holiday
+            if (customDescription) {
+              // If customDescription isn't undefined or an empty string, then the user is editing the holiday
+              holidayEventName = 'holiday-updated';
+              popoverResponse.detail.id = customHolidayId;
+            } else {
+              // Else, the user is creating a new holiday
+              holidayEventName = 'holiday-created';
+            }
           } else if (popoverResponse.detail.delete) {
             // Shoot event to delete holiday
+            holidayEventName = 'holiday-deleted';
+            popoverResponse.detail.id = customHolidayId;
+          }
+
+          if (holidayEventName) {
+            this.dispatchEvent(new CustomEvent(holidayEventName, {
+              bubbles: true,
+              composed: true,
+              detail: popoverResponse.detail
+            }));
           }
         } catch (e) {
           this.__unselectCell(eventTarget);
         }
-
       }
 
       this.__activeDateEnd = undefined;
