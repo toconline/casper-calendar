@@ -21,7 +21,7 @@ export const CasperCalendarMouseEventsMixin = superClass => {
           }
           customHolidayId = eventTarget.dataset.id;
         } else if (node.className === 'holiday') {
-          // TODO: maybe we should do something here
+          return;
         }
       }
 
@@ -71,6 +71,8 @@ export const CasperCalendarMouseEventsMixin = superClass => {
             }));
           }
         } catch (e) {
+          // User closed popover
+        } finally {
           this.__unselectCell(eventTarget);
         }
       }
