@@ -16,10 +16,10 @@
   dependencies:
     "@polymer/iron-overlay-behavior" "^3.x"
 
-"@cloudware-casper/casper-tooltip-dialog@^1.4.0":
-  version "1.4.0"
-  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-tooltip-dialog/1.4.0/94952c64f652b459ed6a3515787818995f3194deabdb3bf8fbe26d701a9149d5#c7542d17b906967ed2a3220d2b1b7f569c78e017"
-  integrity sha512-f1e7rK6sSIiqxkzLg6w6JbHQFB+1lpF7WrFLSphXYrprnKh8Zmq8pBTa5eioo1evw/vlYJ7/kHfLpJ7NixeS0w==
+"@cloudware-casper/casper-tooltip-dialog@^1.x":
+  version "1.4.1"
+  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-tooltip-dialog/1.4.1/319dc798be39aeaa8ad948cd0bcbd3594708cc148ec88e2adce5ab0b45f37f7b#abeabcf48e3dda7cb74631a738fd0fd5855c1ed1"
+  integrity sha512-WBANMvonBbgsmN+SPQM48Ji4lyyFiVPNVbuq8Jcu3x3o5inyDSCD4wpjj1oweJtgksDVKCFX2uJTL88x1VJ4ZQ==
   dependencies:
     "@cloudware-casper/casper-overlay-behavior" "^1.x"
     "@polymer/polymer" "^3.0.0"
