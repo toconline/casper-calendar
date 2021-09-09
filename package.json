@@ -5,7 +5,7 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
-    "@cloudware-casper/casper-icons": "^2.x",
+    "@cloudware-casper/casper-icons": "^3.x",
     "@cloudware-casper/casper-tooltip-dialog": "^1.x",
     "@polymer/paper-radio-button": "^3.x",
     "@polymer/paper-radio-group": "^3.x",
