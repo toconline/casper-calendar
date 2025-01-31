@@ -20,7 +20,7 @@ import {
   CASPER_CALENDAR_MODE_TYPES
 } from '../casper-calendar-constants';
 
-import '@cloudware-casper/casper-icons/casper-icon.js';
+import '@toconline/casper-icons/casper-icon.js';
 import '@polymer/paper-input/paper-input.js';
 import '@polymer/paper-radio-group/paper-radio-group.js';
 import '@polymer/paper-radio-button/paper-radio-button.js';

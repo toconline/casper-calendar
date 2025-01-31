@@ -24,8 +24,8 @@ import { CasperCalendarMouseEventsMixin } from './mixins/casper-calendar-mouse-e
 import { CasperCalendarActiveDatesMixin } from './mixins/casper-calendar-active-dates-mixin.js';
 
 import moment from 'moment/src/moment.js';
-import '@cloudware-casper/casper-icons/casper-icon.js';
-import '@cloudware-casper/casper-tooltip-dialog/casper-popover-dialog.js';
+import '@toconline/casper-icons/casper-icon.js';
+import '@toconline/casper-tooltip-dialog/casper-popover-dialog.js';
 import { timeOut } from '@polymer/polymer/lib/utils/async.js';
 import { Debouncer } from '@polymer/polymer/lib/utils/debounce.js';
 import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
