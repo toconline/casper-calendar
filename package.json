@@ -1,12 +1,12 @@
 {
-  "name": "@cloudware-casper/casper-calendar",
+  "name": "@toconline/casper-calendar",
   "version": "2.0.0",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
-    "@cloudware-casper/casper-icons": "^3.x",
-    "@cloudware-casper/casper-tooltip-dialog": "^1.x",
+    "@toconline/casper-icons": "^3.x",
+    "@toconline/casper-tooltip-dialog": "^1.x",
     "@polymer/paper-radio-button": "^3.x",
     "@polymer/paper-radio-group": "^3.x",
     "@polymer/polymer": "^3.x"
